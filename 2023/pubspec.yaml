@@ -1,0 +1,6 @@
+name: adventofcode2023
+environment:
+  sdk: '^3.2.0'
+
+dependencies:
+  test: any
