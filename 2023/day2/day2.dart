@@ -5,24 +5,24 @@ import 'package:spec/spec.dart';
 
 class Game {
   int id;
-  Iterable<({int red, int green, int blue})> matches;
+  Iterable<({int red, int green, int blue})> rounds;
 
-  Game(this.id, this.matches);
+  Game(this.id, this.rounds);
 
   factory Game.fromLine(String summary) {
-    var [ident, matches] = summary.split(":");
+    var [ident, rounds] = summary.split(":");
 
     var id_match = RegExp(r'Game (\d*)').matchAsPrefix(ident);
     if (id_match == null) throw Exception("Game ID not found");
 
-    var match_descriptions = matches.split(";").map((e) => e.trim());
+    var round_descriptions = rounds.split(";").map((e) => e.trim());
 
     return Game(
-        int.parse(id_match[1]!), match_descriptions.map(_constructRecord));
+        int.parse(id_match[1]!), round_descriptions.map(_constructRecord));
   }
 
   bool meetsConstraint(({int red, int green, int blue}) constraint) {
-    return matches.every((element) => switch (element) {
+    return rounds.every((element) => switch (element) {
           (:int red, :int green, :int blue)
               when (red <= constraint.red) &
                   (green <= constraint.green) &
@@ -34,21 +34,21 @@ class Game {
 
   ({int red, int green, int blue}) smallestConstraint() {
     var min_red = 0, min_green = 0, min_blue = 0;
-    for (var match in matches) {
-      if (match.red > min_red) min_red = match.red;
-      if (match.green > min_green) min_green = match.green;
-      if (match.blue > min_blue) min_blue = match.blue;
+    for (var round in rounds) {
+      if (round.red > min_red) min_red = round.red;
+      if (round.green > min_green) min_green = round.green;
+      if (round.blue > min_blue) min_blue = round.blue;
     }
     return (red: min_red, green: min_green, blue: min_blue);
   }
 
-  static ({int red, int green, int blue}) _constructRecord(String match) {
+  static ({int red, int green, int blue}) _constructRecord(String round) {
     //find red
-    var red_value = RegExp(r'.*?(\d+) red.*').firstMatch(match);
+    var red_value = RegExp(r'.*?(\d+) red.*').firstMatch(round);
     //find blue
-    var blue_value = RegExp(r'.*?(\d+) blue.*').firstMatch(match);
+    var blue_value = RegExp(r'.*?(\d+) blue.*').firstMatch(round);
     //find green
-    var green_value = RegExp(r'.*?(\d+) green.*').firstMatch(match);
+    var green_value = RegExp(r'.*?(\d+) green.*').firstMatch(round);
 
     return (
       red: int.tryParse(red_value?[1] ?? '') ?? 0,
@@ -78,7 +78,7 @@ void main() {
         (green: 5, red: 1, blue: 0)
       ];
 
-      expect(game.matches).toEqual(expected);
+      expect(game.rounds).toEqual(expected);
     });
   });
   group('Part 1', () {
