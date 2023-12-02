@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:spec/spec.dart';
 
 class Game {
@@ -84,6 +87,25 @@ Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green""";
       expect(valid_games
           .map((e) => e.id)
           .reduce((value, element) => value + element)).toEqual(8);
+    });
+
+    test('from input file', () async {
+      final input = File('day2/day2_input.txt');
+      final lines =
+          input.openRead().transform(utf8.decoder).transform(LineSplitter());
+
+      var valid_games_sum = 0;
+
+      try {
+        await for (var line in lines) {
+          var game = Game.fromLine(line);
+          if (game.meetsConstraint(limit)) valid_games_sum += game.id;
+        }
+      } catch (e) {
+        print('oops: $e');
+      }
+
+      expect(valid_games_sum).toEqual(2541);
     });
   });
 }
