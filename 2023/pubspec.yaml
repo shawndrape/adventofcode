@@ -3,4 +3,5 @@ environment:
   sdk: '^3.2.0'
 
 dependencies:
+  spec: ^0.2.3
   test: any
