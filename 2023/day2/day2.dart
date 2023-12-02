@@ -32,6 +32,16 @@ class Game {
         });
   }
 
+  ({int red, int green, int blue}) smallestConstraint() {
+    var min_red = 0, min_green = 0, min_blue = 0;
+    for (var match in matches) {
+      if (match.red > min_red) min_red = match.red;
+      if (match.green > min_green) min_green = match.green;
+      if (match.blue > min_blue) min_blue = match.blue;
+    }
+    return (red: min_red, green: min_green, blue: min_blue);
+  }
+
   static ({int red, int green, int blue}) _constructRecord(String match) {
     //find red
     var red_value = RegExp(r'.*?(\d+) red.*').firstMatch(match);
@@ -47,6 +57,12 @@ class Game {
     );
   }
 }
+
+var example_lines = """Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
+Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
+Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
+Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
+Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green""";
 
 void main() {
   group('core', () {
@@ -74,13 +90,6 @@ void main() {
     var limit = (red: 12, green: 13, blue: 14);
 
     test('from example', () {
-      var example_lines =
-          """Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
-Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
-Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
-Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
-Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green""";
-
       var games = example_lines.split('\n').map(Game.fromLine);
       var valid_games =
           games.where((element) => element.meetsConstraint(limit));
@@ -106,6 +115,40 @@ Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green""";
       }
 
       expect(valid_games_sum).toEqual(2541);
+    });
+  });
+  group('Part 2', () {
+    test('from example', () {
+      var games = example_lines.split('\n').map(Game.fromLine);
+      var expected_minimum_powers = [48, 12, 1560, 630, 36];
+
+      var game_powers = games
+          .map((e) => e.smallestConstraint())
+          .map((e) => e.red * e.blue * e.green);
+
+      expect(game_powers).toEqual(expected_minimum_powers);
+      expect(game_powers.reduce((value, element) => value + element))
+          .toEqual(2286);
+    });
+    test('from input', () async {
+      final input = File('day2/day2_input.txt');
+      final lines =
+          input.openRead().transform(utf8.decoder).transform(LineSplitter());
+
+      var game_power_sum = 0;
+
+      try {
+        await for (var line in lines) {
+          var game = Game.fromLine(line);
+          var c = game.smallestConstraint();
+          var game_power = c.red * c.green * c.blue;
+          game_power_sum += game_power;
+        }
+      } catch (e) {
+        print('oops: $e');
+      }
+
+      expect(game_power_sum).toEqual(66016);
     });
   });
 }
