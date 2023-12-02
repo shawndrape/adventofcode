@@ -96,17 +96,17 @@ zoneight234
 
 In this example, the calibration values are 29, 83, 13, 24, 42, 14, and 76. Adding these together produces 281.
     */
-    String word_to_digit(String value) => switch (value) {
-          "one" => "1",
-          "two" => "2",
-          "three" => "3",
-          "four" => "4",
-          "five" => "5",
-          "six" => "6",
-          "seven" => "7",
-          "eight" => "8",
-          "nine" => "9",
-          _ => throw Exception('Not accepted')
+    int? word_to_digit(String value) => switch (value) {
+          "one" => 1,
+          "two" => 2,
+          "three" => 3,
+          "four" => 4,
+          "five" => 5,
+          "six" => 6,
+          "seven" => 7,
+          "eight" => 8,
+          "nine" => 9,
+          _ => int.tryParse(value)
         };
 
     String convert_digits(String value) {
@@ -114,25 +114,47 @@ In this example, the calibration values are 29, 83, 13, 24, 42, 14, and 76. Addi
       var result_string = "";
 
       var matcher =
-          RegExp(r'.*(one|two|three|four|five|six|seven|eight|nine)$');
+          RegExp(r'.*(\d|one|two|three|four|five|six|seven|eight|nine)');
 
       for (var char in value.split("")) {
         string_buffer += char;
         var match = matcher.firstMatch(string_buffer);
         if (match == null) continue;
-        result_string +=
-            string_buffer.replaceFirst(match[1]!, word_to_digit(match[1]!));
+        // result_string +=
+        //     string_buffer.replaceFirst(match[1]!, word_to_digit(match[1]!));
         string_buffer = "";
       }
 
       return result_string + string_buffer;
     }
 
+    List<int> extract_digits(String value) {
+      print("processing $value");
+      var results = <int>[];
+      var matcher =
+          RegExp(r'.*?(\d|one|two|four|five|six|seven|eight|three|nine).*');
+      print('starting loop');
+      for (var x = 0; x < value.length; x++) {
+        print('X is $x');
+        var match = matcher.matchAsPrefix(value, x);
+        if (match == null) break;
+        String match_text = match[1]!;
+        print('found match of: $match_text');
+        var match_value = word_to_digit(match_text);
+        if (match_value == null)
+          throw Exception('Found a non-digit in $match_text');
+
+        results.add(match_value);
+        var chars_to_skip = value.substring(x).indexOf(match_text);
+        print("$match_text starts at position ${x + chars_to_skip} in $value");
+        x += chars_to_skip;
+      }
+      return results;
+    }
+
     int calibrate(String value) {
-      final digitized_value = convert_digits(value);
-      final stripped_numbers = digitized_value.replaceAll(RegExp(r'[a-z]'), '');
-      final List<int> digits =
-          stripped_numbers.split('').map(int.parse).toList();
+      final List<int> digits = extract_digits(value);
+      print("found digits: $digits");
       if (digits.length < 1) {
         throw Exception('No number found: $digits from value $value');
       }
@@ -164,7 +186,8 @@ In this example, the calibration values are 29, 83, 13, 24, 42, 14, and 76. Addi
 
     test('hint from reddit thread', () {
       expect(calibrate('eighthree'), equals(83));
-    }, solo: true);
+      expect(calibrate('oneighthree'), equals(13));
+    });
 
     test('additional samples from test file', () {
       var values = [
@@ -205,7 +228,7 @@ In this example, the calibration values are 29, 83, 13, 24, 42, 14, and 76. Addi
     });
 
     test('calibration passes for input file', () async {
-      final expected_calibration_sum = 0;
+      final expected_calibration_sum = 54925;
 
       final input = File('day1/day1_input.txt');
       final lines =
