@@ -19,7 +19,14 @@ class Game {
   }
 
   bool meetsConstraint(({int red, int green, int blue}) constraint) {
-    return true;
+    return matches.every((element) => switch (element) {
+          (:int red, :int green, :int blue)
+              when (red <= constraint.red) &
+                  (green <= constraint.green) &
+                  (blue <= constraint.blue) =>
+            true,
+          _ => false
+        });
   }
 
   static ({int red, int green, int blue}) _constructRecord(String match) {
@@ -64,13 +71,19 @@ void main() {
     var limit = (red: 12, green: 13, blue: 14);
 
     test('from example', () {
-      var example_lines = """
-Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
+      var example_lines =
+          """Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
 Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
 Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
 Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
-Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green
-      """;
+Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green""";
+
+      var games = example_lines.split('\n').map(Game.fromLine);
+      var valid_games =
+          games.where((element) => element.meetsConstraint(limit));
+      expect(valid_games
+          .map((e) => e.id)
+          .reduce((value, element) => value + element)).toEqual(8);
     });
   });
 }
