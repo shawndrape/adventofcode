@@ -61,7 +61,7 @@ Consider your entire calibration document. What is the sum of all of the calibra
     test('calibration passes for input file', () async {
       final expected_calibration_sum = 55172;
 
-      final input = File('day1_input.txt');
+      final input = File('day1/day1_input.txt');
       final lines =
           input.openRead().transform(utf8.decoder).transform(LineSplitter());
       var calibration_sum = 0;
@@ -95,12 +95,46 @@ zoneight234
 
 In this example, the calibration values are 29, 83, 13, 24, 42, 14, and 76. Adding these together produces 281.
     */
+    String word_to_digit(String value) => switch (value) {
+          "one" => "1",
+          "two" => "2",
+          "three" => "3",
+          "four" => "4",
+          "five" => "5",
+          "six" => "6",
+          "seven" => "7",
+          "eight" => "8",
+          "nine" => "9",
+          _ => throw Exception('Not accepted')
+        };
+
+    String convert_digits(String value) {
+      var string_buffer = "";
+      var result_string = "";
+
+      var matcher =
+          RegExp(r'.*(one|two|three|four|five|six|seven|eight|nine)$');
+
+      for (var char in value.split("")) {
+        string_buffer += char;
+        var match = matcher.firstMatch(string_buffer);
+        if (match == null) continue;
+        result_string +=
+            string_buffer.replaceFirst(match[1]!, word_to_digit(match[1]!));
+        string_buffer = "";
+      }
+
+      return result_string + string_buffer;
+    }
+
     int calibrate(String value) {
-      final stripped_numbers = value.replaceAll(RegExp(r'[a-z]'), '');
+      final digitized_value = convert_digits(value);
+      print([value, digitized_value]);
+      final stripped_numbers = digitized_value.replaceAll(RegExp(r'[a-z]'), '');
       final List<int> digits =
           stripped_numbers.split('').map(int.parse).toList();
       if (digits.length < 1) {
-        throw Exception('No number found: $digits');
+        throw Exception('No number found: $digits from value $value');
       }
       if (digits.length == 1) {
         return int.parse("${digits.first}${digits.first}");
