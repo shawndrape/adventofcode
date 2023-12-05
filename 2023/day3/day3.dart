@@ -155,6 +155,7 @@ void main() {
       //adjecent to multiple symbols 😅
     });
     test('input file', () async {
+      // ignore: unused_local_variable
       var detected_symbols = {
         '-',
         '#',
