@@ -78,13 +78,21 @@ List<int> extractNumbers(List<List<String>> schem, ({int x, int y}) point) {
   return (found_number, right_bound - 1);
 }
 
-Iterable<int> analyzeSchematic(String schematic) {
+Iterable<int> analyzeSchematic(String schematic,
+    {bool checkGearsOnly = false}) {
   var result = <int>[];
   var traversable = traversableSchematic(schematic);
   for (var y = 0; y < traversable.length; y++) {
     for (var x = 0; x < traversable[y].length; x++) {
-      if (getNodeType(traversable[y][x]) == Node.SYMBOL)
-        result.addAll(extractNumbers(traversable, (x: x, y: y)));
+      if (getNodeType(traversable[y][x]) == Node.SYMBOL) {
+        if (checkGearsOnly && traversable[y][x] != '*') continue;
+        var extracted = extractNumbers(traversable, (x: x, y: y));
+        if (checkGearsOnly && extracted.length == 2) {
+          result.add(extracted[0] * extracted[1]);
+        } else if (!checkGearsOnly) {
+          result.addAll(extracted);
+        }
+      }
     }
   }
   return result;
@@ -147,7 +155,6 @@ void main() {
       //adjecent to multiple symbols 😅
     });
     test('input file', () async {
-      var file = File('day3/day3_input.txt');
       var detected_symbols = {
         '-',
         '#',
@@ -160,11 +167,27 @@ void main() {
         '/',
         '%'
       };
+      var file = File('day3/day3_input.txt');
       var input = await file.readAsString();
 
       var discovered_numbers = analyzeSchematic(input);
       expect(discovered_numbers.sum).greaterThan(333179);
       expect(discovered_numbers.sum).toEqual(556367);
+    });
+  });
+  group('part 2', () {
+    test('example', () {
+      var extractedGearRatios =
+          analyzeSchematic(example_schematic, checkGearsOnly: true);
+
+      expect(extractedGearRatios.sum).toBe(467835);
+    });
+    test('input file', () async {
+      var file = File('day3/day3_input.txt');
+      var input = await file.readAsString();
+
+      var discovered_ratios = analyzeSchematic(input, checkGearsOnly: true);
+      expect(discovered_ratios.sum).toBe(89471771);
     });
   });
 }
