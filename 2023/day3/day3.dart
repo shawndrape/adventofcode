@@ -3,20 +3,6 @@ import 'dart:io';
 import 'package:collection/collection.dart';
 import 'package:spec/spec.dart';
 
-var example_schematic = r'''
-467..114..
-...*......
-..35..633.
-......#...
-617*......
-.....+.58.
-..592.....
-......755.
-...$.*....
-.664.598..''';
-
-var valid_example_numbers = {467, 35, 633, 617, 592, 755, 664, 598};
-
 List<List<String>> traversableSchematic(String schematic) {
   List<List<String>> result = [];
   for (var line in schematic.split("\n")) {
@@ -50,8 +36,8 @@ Node getNodeType(String char) {
   }
 }
 
-Set<int> extractNumbers(List<List<String>> schem, ({int x, int y}) point) {
-  var result = <int>{};
+List<int> extractNumbers(List<List<String>> schem, ({int x, int y}) point) {
+  var result = <int>[];
 
   var min_x = 0;
   var min_y = 0;
@@ -59,8 +45,8 @@ Set<int> extractNumbers(List<List<String>> schem, ({int x, int y}) point) {
   var max_x = schem[0].length - 1;
 
   //starting from point's top-left (-1, -1), scan for digits
-  for (var x = -1; x <= 1; x++) {
-    for (var y = -1; y <= 1; y++) {
+  for (var y = -1; y <= 1; y++) {
+    for (var x = -1; x <= 1; x++) {
       if (x == 0 && y == 0) continue;
       if (point.x + x < min_x || point.x + x > max_x) continue;
       if (point.y + y < min_y || point.y + y > max_y) continue;
@@ -68,8 +54,10 @@ Set<int> extractNumbers(List<List<String>> schem, ({int x, int y}) point) {
       if (getNodeType(schem[curr_point.y][curr_point.x]) != Node.DIGIT)
         continue;
 
-      int found_number = pullNumber(schem[curr_point.y], curr_point.x);
+      var (found_number, shift_x) =
+          pullNumber(schem[curr_point.y], curr_point.x);
       result.add(found_number);
+      x += shift_x;
     }
   }
   return result;
@@ -77,7 +65,7 @@ Set<int> extractNumbers(List<List<String>> schem, ({int x, int y}) point) {
 
 ///assumption: cursor already confirmed to be a digit
 ///found a number! Traverse X-axis in both directions until no longer on a digit
-int pullNumber(List<String> line, int cursor) {
+(int, int) pullNumber(List<String> line, int cursor) {
   var left_bound = -1, right_bound = 1;
   try {
     while (getNodeType(line[cursor + left_bound]) == Node.DIGIT) left_bound--;
@@ -87,11 +75,11 @@ int pullNumber(List<String> line, int cursor) {
   } on RangeError {}
   int found_number = int.parse(
       line.sublist(cursor + left_bound + 1, cursor + right_bound).join());
-  return found_number;
+  return (found_number, right_bound - 1);
 }
 
 Iterable<int> analyzeSchematic(String schematic) {
-  var result = <int>{};
+  var result = <int>[];
   var traversable = traversableSchematic(schematic);
   for (var y = 0; y < traversable.length; y++) {
     for (var x = 0; x < traversable[y].length; x++) {
@@ -101,6 +89,20 @@ Iterable<int> analyzeSchematic(String schematic) {
   }
   return result;
 }
+
+var example_schematic = r'''
+467..114..
+...*......
+..35..633.
+......#...
+617*......
+.....+.58.
+..592.....
+......755.
+...$.*....
+.664.598..''';
+
+var valid_example_numbers = {467, 35, 633, 617, 592, 755, 664, 598};
 
 void main() {
   group('part 1', () {
@@ -118,19 +120,26 @@ void main() {
     });
     test('test pullNumber', () {
       var testInput = "...1234...".split("");
-      expect(pullNumber(testInput, 5)).toEqual(1234);
+      expect(pullNumber(testInput, 5).$1).toEqual(1234);
 
       var test2 = "9876.....".split("");
-      expect(pullNumber(test2, 1)).toEqual(9876);
+      expect(pullNumber(test2, 1).$1).toEqual(9876);
 
       var test3 = "....*6789".split("");
-      expect(pullNumber(test3, 5)).toEqual(6789);
+      expect(pullNumber(test3, 5).$1).toEqual(6789);
     });
-    test('example', () {
+    test(solo: true, 'example', () {
       var extracted_schematic_numbers = analyzeSchematic(example_schematic);
 
       expect(extracted_schematic_numbers).toEqual(valid_example_numbers);
       expect(extracted_schematic_numbers.sum).toEqual(4361);
+    });
+    test('duplicate numbers around a symbol', () {
+      var input = r'''51.
+.*.
+.51''';
+
+      expect(analyzeSchematic(input).sum).toEqual(102);
     });
     test('input file', () async {
       var file = File('day3/day3_input.txt');
