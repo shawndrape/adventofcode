@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:collection/collection.dart';
 import 'package:spec/spec.dart';
 
@@ -129,6 +131,25 @@ void main() {
 
       expect(extracted_schematic_numbers).toEqual(valid_example_numbers);
       expect(extracted_schematic_numbers.sum).toEqual(4361);
+    });
+    test('input file', () async {
+      var file = File('day3/day3_input.txt');
+      var detected_symbols = {
+        '-',
+        '#',
+        '=',
+        '*',
+        '+',
+        '@',
+        r'$',
+        '&',
+        '/',
+        '%'
+      };
+      var input = await file.readAsString();
+
+      var discovered_numbers = analyzeSchematic(input);
+      expect(discovered_numbers.sum).greaterThan(333179);
     });
   });
 }
