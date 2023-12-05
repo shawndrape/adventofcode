@@ -128,7 +128,7 @@ void main() {
       var test3 = "....*6789".split("");
       expect(pullNumber(test3, 5).$1).toEqual(6789);
     });
-    test(solo: true, 'example', () {
+    test('example', () {
       var extracted_schematic_numbers = analyzeSchematic(example_schematic);
 
       expect(extracted_schematic_numbers).toEqual(valid_example_numbers);
@@ -140,6 +140,11 @@ void main() {
 .51''';
 
       expect(analyzeSchematic(input).sum).toEqual(102);
+    });
+    test('duplicate symbols around a number', () {
+      //pray this isn't needed
+      //part 1 value worked, so input file does not contain any numbers
+      //adjecent to multiple symbols 😅
     });
     test('input file', () async {
       var file = File('day3/day3_input.txt');
@@ -159,6 +164,7 @@ void main() {
 
       var discovered_numbers = analyzeSchematic(input);
       expect(discovered_numbers.sum).greaterThan(333179);
+      expect(discovered_numbers.sum).toEqual(556367);
     });
   });
 }
