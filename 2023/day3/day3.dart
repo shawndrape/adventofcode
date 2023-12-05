@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:spec/spec.dart';
 
 var example_schematic = r'''
@@ -12,9 +13,9 @@ var example_schematic = r'''
 ...$.*....
 .664.598..''';
 
-var valid_example_numbers = {467, 35, 633, 617, 592, 755, 644, 598};
+var valid_example_numbers = {467, 35, 633, 617, 592, 755, 664, 598};
 
-List<List<String>> traversable_schematic(String schematic) {
+List<List<String>> traversableSchematic(String schematic) {
   List<List<String>> result = [];
   for (var line in schematic.split("\n")) {
     result.add(line.split(''));
@@ -47,7 +48,7 @@ Node getNodeType(String char) {
   }
 }
 
-Set<int> extract_numbers(List<List<String>> schem, ({int x, int y}) point) {
+Set<int> extractNumbers(List<List<String>> schem, ({int x, int y}) point) {
   var result = <int>{};
 
   var min_x = 0;
@@ -59,8 +60,8 @@ Set<int> extract_numbers(List<List<String>> schem, ({int x, int y}) point) {
   for (var x = -1; x <= 1; x++) {
     for (var y = -1; y <= 1; y++) {
       if (x == 0 && y == 0) continue;
-      if (x < min_x || x > max_x) continue;
-      if (y < min_y || y > max_y) continue;
+      if (point.x + x < min_x || point.x + x > max_x) continue;
+      if (point.y + y < min_y || point.y + y > max_y) continue;
       var curr_point = (x: point.x + x, y: point.y + y);
       if (getNodeType(schem[curr_point.y][curr_point.x]) != Node.DIGIT)
         continue;
@@ -87,8 +88,16 @@ int pullNumber(List<String> line, int cursor) {
   return found_number;
 }
 
-Iterable<int> analyze_schematic(String schematic) {
-  return {35};
+Iterable<int> analyzeSchematic(String schematic) {
+  var result = <int>{};
+  var traversable = traversableSchematic(schematic);
+  for (var y = 0; y < traversable.length; y++) {
+    for (var x = 0; x < traversable[y].length; x++) {
+      if (getNodeType(traversable[y][x]) == Node.SYMBOL)
+        result.addAll(extractNumbers(traversable, (x: x, y: y)));
+    }
+  }
+  return result;
 }
 
 void main() {
@@ -116,9 +125,10 @@ void main() {
       expect(pullNumber(test3, 5)).toEqual(6789);
     });
     test('example', () {
-      var extracted_schematic_numbers = analyze_schematic(example_schematic);
+      var extracted_schematic_numbers = analyzeSchematic(example_schematic);
 
       expect(extracted_schematic_numbers).toEqual(valid_example_numbers);
+      expect(extracted_schematic_numbers.sum).toEqual(4361);
     });
   });
 }
