@@ -230,7 +230,7 @@ In this example, the calibration values are 29, 83, 13, 24, 42, 14, and 76. Addi
     test('calibration passes for input file', () async {
       final expected_calibration_sum = 54925;
 
-      final input = File('day1/day1_input.txt');
+      final input = File('day1_input.txt');
       final lines =
           input.openRead().transform(utf8.decoder).transform(LineSplitter());
       var calibration_sum = 0;

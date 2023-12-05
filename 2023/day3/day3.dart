@@ -168,7 +168,7 @@ void main() {
         '/',
         '%'
       };
-      var file = File('day3/day3_input.txt');
+      var file = File('day3_input.txt');
       var input = await file.readAsString();
 
       var discovered_numbers = analyzeSchematic(input);
@@ -184,7 +184,7 @@ void main() {
       expect(extractedGearRatios.sum).toBe(467835);
     });
     test('input file', () async {
-      var file = File('day3/day3_input.txt');
+      var file = File('day3_input.txt');
       var input = await file.readAsString();
 
       var discovered_ratios = analyzeSchematic(input, checkGearsOnly: true);

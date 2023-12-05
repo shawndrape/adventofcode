@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 
 import 'package:collection/collection.dart';
@@ -5,7 +7,7 @@ import 'package:spec/spec.dart';
 
 int pointsForGame(int numMatches) => switch (numMatches) {
       <= 0 => 0,
-      > 5 => 0,
+      > 10 => 0,
       _ => pow(2, numMatches - 1).toInt(),
     };
 
@@ -19,7 +21,7 @@ Card 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11""";
 
 ({int game, int matches, int score}) getWinnings(String card) {
   var [title, details] = card.split(":");
-  var game_id = int.parse(title.replaceFirst("Card ", ""));
+  var game_id = int.parse(title.replaceFirst(RegExp(r"Card\s+"), ""));
 
   var [winning_numbers, chosen_numbers] = details.split("|");
   var winning_ints =
@@ -44,6 +46,18 @@ void main() {
       expect(results).toEqual(expected_winnings);
       expect(results.sum).toBe(13);
     });
-    test('input file', () {});
+    test('input file', () async {
+      var input = File('day4_input.txt');
+      final lines =
+          input.openRead().transform(utf8.decoder).transform(LineSplitter());
+
+      var card_winning_sum = 0;
+      await for (var card in lines) {
+        card_winning_sum += getWinnings(card).score;
+      }
+
+      expect(card_winning_sum).greaterThan(472);
+      expect(card_winning_sum).toBe(22488);
+    });
   });
 }

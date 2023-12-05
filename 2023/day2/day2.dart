@@ -99,7 +99,7 @@ void main() {
     });
 
     test('from input file', () async {
-      final input = File('day2/day2_input.txt');
+      final input = File('day2_input.txt');
       final lines =
           input.openRead().transform(utf8.decoder).transform(LineSplitter());
 
@@ -131,7 +131,7 @@ void main() {
           .toEqual(2286);
     });
     test('from input', () async {
-      final input = File('day2/day2_input.txt');
+      final input = File('day2_input.txt');
       final lines =
           input.openRead().transform(utf8.decoder).transform(LineSplitter());
 
