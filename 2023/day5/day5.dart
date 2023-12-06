@@ -296,4 +296,30 @@ void main() {
       expect(sorted_by_location_asc[0].last).toBe(51580674);
     });
   });
+  group('part 2', () {
+    test('example', () {
+      var seed_ranges = example_input[0]!.split(" ").map(int.parse).toList();
+
+      var actual = <List<int>>[];
+      for (var seed = 0; seed < seed_ranges.length; seed += 2) {
+        var range = List.generate(
+            seed_ranges[seed + 1], (index) => seed_ranges[seed] + index);
+        actual.addAll(range.map((e) => [e]));
+      }
+      for (var x = 1; x <= 7; x++) {
+        // print('parsing rule $x');
+        var filterSource = example_input[x]!;
+        var filterRules = parseFilter(filterSource);
+        var filter = generateFilter(filterRules);
+        // print('applying filter to seed list');
+        actual = actual.mapIndexed((int index, e) {
+          // print('applying filter $x to seed ${index + 1}');
+          return [...e, filter(e.last)];
+        }).toList();
+      }
+
+      var sorted_by_location_asc = actual.sorted((a, b) => a.last - b.last);
+      expect(sorted_by_location_asc[0].last).toBe(46);
+    });
+  });
 }
