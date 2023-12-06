@@ -1,52 +1,7 @@
-import 'dart:collection';
+seeds: 630335678 71155519 260178142 125005421 1548082684 519777283 4104586697 30692976 1018893962 410959790 3570781652 45062110 74139777 106006724 3262608046 213460151 3022784256 121993130 2138898608 36769984
 
-import 'package:collection/collection.dart';
-import 'package:spec/spec.dart';
-
-Map<int, int> parseFilter(String summary) {
-  var result = <int, int>{};
-  var split = summary.split("\n");
-  var counter = 0;
-  for (var line in split) {
-    print('generate filter rule $counter of ${split.length}');
-    var [dest, source, length] = line.split(" ").map(int.parse).toList();
-    for (var x = 0; x < length; x++) {
-      result[x + source] = x + dest;
-    }
-    counter++;
-  }
-  return result;
-}
-
-int Function(int e) generateFilter(Map<int, int> filterPattern) =>
-    (int e) => filterPattern[e] ?? e;
-
-void main() {
-  const example_input = {
-    0: "79 14 55 13",
-    1: """50 98 2
-52 50 48""",
-    2: """0 15 37
-37 52 2
-39 0 15""",
-    3: """49 53 8
-0 11 42
-42 0 7
-57 7 4""",
-    4: """88 18 7
-18 25 70""",
-    5: """45 77 23
-81 45 19
-68 64 13""",
-    6: """0 69 1
-1 0 69""",
-    7: """60 56 37
-56 93 4""",
-  };
-
-  const input_file = {
-    0: "630335678 71155519 260178142 125005421 1548082684 519777283 4104586697 30692976 1018893962 410959790 3570781652 45062110 74139777 106006724 3262608046 213460151 3022784256 121993130 2138898608 36769984",
-    1: """2977255263 3423361099 161177662
+seed-to-soil map:
+2977255263 3423361099 161177662
 3464809483 1524036300 40280620
 1278969303 2583891002 282823382
 3766263020 1796922321 171061976
@@ -73,8 +28,10 @@ void main() {
 3138432925 2428416227 29750096
 122327491 175896945 266555854
 671222912 1564316920 232605401
-3937324996 1967984297 7627237""",
-    2: """895998030 0 382128379
+3937324996 1967984297 7627237
+
+soil-to-fertilizer map:
+895998030 0 382128379
 2851625320 2664267363 205943350
 2518444693 3961786669 333180627
 1879667741 2025490411 638776952
@@ -83,8 +40,10 @@ void main() {
 558555556 906396047 337442474
 3057568670 3884281669 77505000
 3135073670 1879667741 145822670
-1278126409 382128379 524267668""",
-    3: """0 1845976330 336090970
+1278126409 382128379 524267668
+
+fertilizer-to-water map:
+0 1845976330 336090970
 3299138007 3322545218 12048535
 336090970 0 11457152
 1280501317 1371665084 474311246
@@ -92,8 +51,10 @@ void main() {
 3311186542 2468197905 738651397
 2468197905 3206849302 115695916
 347548122 11457152 932953195
-1754812563 944410347 427254737""",
-    4: """1121222108 519789808 4326619
+1754812563 944410347 427254737
+
+water-to-light map:
+1121222108 519789808 4326619
 1125548727 524116427 429792955
 1052043895 3930896885 69178213
 3210593080 0 36442681
@@ -115,8 +76,10 @@ void main() {
 752944950 220690863 299098945
 2806404287 2004456647 404188793
 1807746471 3556218959 54585870
-471095174 953909382 12896064""",
-    5: """3941111261 382813357 83783792
+471095174 953909382 12896064
+
+light-to-temperature map:
+3941111261 382813357 83783792
 4083751028 2792620142 62769876
 2924924808 517646744 141124785
 10073304 296361721 86451636
@@ -147,8 +110,10 @@ void main() {
 2704930468 3036033178 108568050
 4046204307 1123108125 37546721
 1369806614 954914587 50815335
-1954977001 2088651606 142746770""",
-    6: """3744493855 2753433800 53429527
+1954977001 2088651606 142746770
+
+temperature-to-humidity map:
+3744493855 2753433800 53429527
 3926657179 2806863327 207882975
 567844723 1829271702 6392959
 3797923382 3046866321 128733797
@@ -192,8 +157,10 @@ void main() {
 3882034 47011836 141621046
 0 699243952 3882034
 1537980836 697205431 2038521
-2419729051 3374853757 92860723""",
-    7: """3880387060 2052152805 97611299
+2419729051 3374853757 92860723
+
+humidity-to-location map:
+3880387060 2052152805 97611299
 2442736538 3295723734 10591308
 3014234548 3058886861 44150293
 2722522139 3413370195 153277538
@@ -241,52 +208,4 @@ void main() {
 58830589 156371242 46399773
 536612207 1265535688 142084550
 757385927 84721366 32401782
-1327116227 694763977 520514661""",
-  };
-  group('part 1', () {
-    test('example', () {
-      /*
-      Seed 79, soil 81, fertilizer 81, water 81, light 74, temperature 78, humidity 78, location 82.
-      Seed 14, soil 14, fertilizer 53, water 49, light 42, temperature 42, humidity 43, location 43.
-      Seed 55, soil 57, fertilizer 57, water 53, light 46, temperature 82, humidity 82, location 86.
-      Seed 13, soil 13, fertilizer 52, water 41, light 34, temperature 34, humidity 35, location 35.
-      */
-      var expected_values_array = [
-        [79, 81, 81, 81, 74, 78, 78, 82],
-        [14, 14, 53, 49, 42, 42, 43, 43],
-        [55, 57, 57, 53, 46, 82, 82, 86],
-        [13, 13, 52, 41, 34, 34, 35, 35],
-      ];
-
-      var actual = example_input[0]!.split(" ").map(int.parse).map((e) => [e]);
-
-      for (var x = 1; x <= 7; x++) {
-        var filterSource = example_input[x]!;
-        var filterMap = parseFilter(filterSource);
-        var filter = generateFilter(filterMap);
-        print('applying filter to seed list');
-        actual = actual.map((e) => [...e, filter(e.last)]);
-      }
-      expect(actual).toEqual(expected_values_array);
-
-      var sorted_by_location_asc = actual.sorted((a, b) => a.last - b.last);
-      expect(sorted_by_location_asc[0].last).toBe(35);
-    });
-    test('input file', () {
-      //file structure not worth parsing into blocks, so it's been copied
-
-      var actual = input_file[0]!.split(" ").map(int.parse).map((e) => [e]);
-
-      for (var x = 1; x <= 7; x++) {
-        print('processing filter $x');
-        var filterSource = input_file[x]!;
-        var filterMap = parseFilter(filterSource);
-        var filter = generateFilter(filterMap);
-        actual = actual.map((e) => [...e, filter(e.last)]);
-      }
-
-      var sorted_by_location_asc = actual.sorted((a, b) => a.last - b.last);
-      expect(sorted_by_location_asc[0].last).toBe(0);
-    });
-  });
-}
+1327116227 694763977 520514661
