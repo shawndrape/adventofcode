@@ -1,25 +1,29 @@
-import 'dart:collection';
-
 import 'package:collection/collection.dart';
 import 'package:spec/spec.dart';
 
-Map<int, int> parseFilter(String summary) {
-  var result = <int, int>{};
+List<({int dest, int source, int length})> parseFilter(String summary) {
+  var result = <({int dest, int source, int length})>[];
   var split = summary.split("\n");
-  var counter = 0;
+  // var counter = 1;
   for (var line in split) {
-    print('generate filter rule $counter of ${split.length}');
+    // print('parse filter rule $counter of ${split.length}');
     var [dest, source, length] = line.split(" ").map(int.parse).toList();
-    for (var x = 0; x < length; x++) {
-      result[x + source] = x + dest;
-    }
-    counter++;
+    result.add((dest: dest, source: source, length: length));
+    // counter++;
   }
   return result;
 }
 
-int Function(int e) generateFilter(Map<int, int> filterPattern) =>
-    (int e) => filterPattern[e] ?? e;
+int Function(int e) generateFilter(
+        List<({int dest, int source, int length})> filterPattern) =>
+    (e) {
+      var applicableFilter = filterPattern
+          .where((rule) => rule.source <= e && e < (rule.source + rule.length))
+          .firstOrNull;
+      if (applicableFilter == null) return e;
+      var offset = e - applicableFilter.source;
+      return applicableFilter.dest + offset;
+    };
 
 void main() {
   const example_input = {
@@ -261,11 +265,15 @@ void main() {
       var actual = example_input[0]!.split(" ").map(int.parse).map((e) => [e]);
 
       for (var x = 1; x <= 7; x++) {
+        // print('parsing rule $x');
         var filterSource = example_input[x]!;
-        var filterMap = parseFilter(filterSource);
-        var filter = generateFilter(filterMap);
-        print('applying filter to seed list');
-        actual = actual.map((e) => [...e, filter(e.last)]);
+        var filterRules = parseFilter(filterSource);
+        var filter = generateFilter(filterRules);
+        // print('applying filter to seed list');
+        actual = actual.mapIndexed((int index, e) {
+          // print('applying filter $x to seed ${index + 1}');
+          return [...e, filter(e.last)];
+        });
       }
       expect(actual).toEqual(expected_values_array);
 
@@ -278,15 +286,14 @@ void main() {
       var actual = input_file[0]!.split(" ").map(int.parse).map((e) => [e]);
 
       for (var x = 1; x <= 7; x++) {
-        print('processing filter $x');
         var filterSource = input_file[x]!;
-        var filterMap = parseFilter(filterSource);
-        var filter = generateFilter(filterMap);
+        var filterRules = parseFilter(filterSource);
+        var filter = generateFilter(filterRules);
         actual = actual.map((e) => [...e, filter(e.last)]);
       }
 
       var sorted_by_location_asc = actual.sorted((a, b) => a.last - b.last);
-      expect(sorted_by_location_asc[0].last).toBe(0);
+      expect(sorted_by_location_asc[0].last).toBe(51580674);
     });
   });
 }
