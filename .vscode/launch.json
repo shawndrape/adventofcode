@@ -6,7 +6,10 @@
         "type": "dart",
         "request": "launch",
         "program": "${file}",
-        "cwd": "${fileDirname}"
+        "cwd": "${fileDirname}",
+        "args": [
+          "--enableAsserts",
+        ]
       },
     ]
   }

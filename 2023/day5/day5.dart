@@ -34,61 +34,72 @@ int Function(int e) generateFilter(
   return (first: first, length: iterator.current as int);
 }
 
-Iterable<({int first, int length})> Function(
-    int start, int length) generateFilterForRange(
-        List<({int dest, int source, int length})> filterPattern) =>
-    (int first, int length) {
-      var resulting_ranges = <List<dynamic>>[];
-      for (var rule in filterPattern) {
-        resulting_ranges.addAll([
-          //range entirely before filter pattern
-          // x < x +l < src < src + srcl
-          if (first + length < rule.source) [first, length, 'a'],
-          //range starts before and ends within pattern
-          // x < src < x+l < src + srcl
-          if (first < rule.source &&
-              rule.source < first + length &&
-              first + length < rule.source + rule.length) ...[
-            [first, rule.source - first, 'b1'],
-            [rule.dest, first + length - rule.source, 'b2']
-          ],
-          //range entirely within filter pattern
-          // src < x < x + l < src + srcl
-          if (rule.source < first &&
-              first + length <= rule.source + rule.length)
-            [rule.dest + first - rule.source, length, 'c'],
-          //range starts before and ends after pattern
-          //x < src < src + srcl < x + l
-          if (first < rule.source &&
-              rule.source + rule.length <= first + length) ...[
-            [first, rule.source - first, 'd1'],
-            [rule.dest, rule.length, 'd2'],
-            [
-              rule.source + rule.length,
-              (first + length) - (rule.source + rule.length),
-              'd3'
-            ],
-          ],
-          //range starts within and ends after pattern
-          // src < x < src + srcl < x + l
-          if (rule.source < first &&
-              first < rule.source + rule.length &&
-              rule.source + rule.length <= first + length) ...[
-            [
-              rule.dest + first - rule.source,
-              (length) - (first - rule.source + rule.length),
-              'e1'
-            ],
-            [rule.source + rule.length, first - rule.source + rule.length, 'e2']
-          ],
-          //range entirely after filter pattern
-          // src < src + srcl < x < x + l
-          if (rule.source + rule.length < first) [first, length, 'f'],
-        ]);
-      }
-      // print(resulting_ranges);
-      return resulting_ranges.map(toTuple);
-    };
+Iterable<({int first, int length})> Function(int start, int length)
+    generateFilterForRange(
+            List<({int dest, int source, int length})> filterPattern) =>
+        (int OGfirst, int OGlength) {
+          var resulting_ranges = <List<dynamic>>[];
+          // var resulting_ranges = QueueList<List<dynamic>>();
+          resulting_ranges.add([OGfirst, OGlength, 'OG']);
+          for (var rule in filterPattern) {
+            resulting_ranges = resulting_ranges.expand((elem) {
+              var [first, length, _] = elem;
+              return [
+                //range entirely before filter pattern
+                // x < x +l < src < src + srcl
+                if (first + length < rule.source) [first, length, 'a'],
+                //range starts before and ends within pattern
+                // x < src < x+l < src + srcl
+                if (first < rule.source &&
+                    rule.source < first + length &&
+                    first + length < rule.source + rule.length) ...[
+                  [first, rule.source - first, 'b1'],
+                  [rule.dest, first + length - rule.source, 'b2']
+                ],
+                //range entirely within filter pattern
+                // src < x < x + l < src + srcl
+                if (rule.source < first &&
+                    first + length <= rule.source + rule.length)
+                  [rule.dest + first - rule.source, length, 'c'],
+                //range starts before and ends after pattern
+                //x < src < src + srcl < x + l
+                if (first < rule.source &&
+                    rule.source + rule.length <= first + length) ...[
+                  [first, rule.source - first, 'd1'],
+                  [rule.dest, rule.length, 'd2'],
+                  [
+                    rule.source + rule.length,
+                    (first + length) - (rule.source + rule.length),
+                    'd3'
+                  ],
+                ],
+                //range starts within and ends after pattern
+                // src < x < src + srcl < x + l
+                if (rule.source < first &&
+                    first < rule.source + rule.length &&
+                    rule.source + rule.length <= first + length) ...[
+                  [
+                    rule.dest + first - rule.source,
+                    (length) - (first - rule.source + rule.length),
+                    'e1'
+                  ],
+                  [
+                    rule.source + rule.length,
+                    first - rule.source + rule.length,
+                    'e2'
+                  ]
+                ],
+                //range entirely after filter pattern
+                // src < src + srcl < x < x + l
+                if (rule.source + rule.length < first) [first, length, 'f'],
+              ];
+            }).toList();
+          }
+          print(resulting_ranges);
+          if (resulting_ranges.any((element) => element[1] <= 0))
+            throw Exception('Unexpected empty or negative ranges');
+          return resulting_ranges.map(toTuple);
+        };
 
 void main() {
   const example_input = {
@@ -394,32 +405,29 @@ void main() {
     });
 
     test('example', () {
-      var seed_ranges =
-          example_input[0]!.split(" ").map(int.parse).slices(2).first;
+      var seed_ranges = example_input[0]!.split(" ").map(int.parse);
+      var grouped_ranges = seed_ranges.slices(2);
       //using first for now because example confirms the correct lowest location
       //comes from the first range
 
-      var actual = <List<int>>[];
-      for (var seed = 0; seed < seed_ranges.length; seed += 2) {
-        var range = List.generate(
-            seed_ranges[seed + 1], (index) => seed_ranges[seed] + index);
-        actual.addAll(range.map((e) => [e]));
-      }
+      var actual =
+          grouped_ranges.map((e) => (first: e[0], length: e[1])).take(1);
 
+      print(actual);
       for (var x = 1; x <= 7; x++) {
-        // print('parsing rule $x');
+        print('parsing rule $x');
         var filterSource = example_input[x]!;
         var filterRules = parseFilter(filterSource);
-        var filter = generateFilter(filterRules);
-        // print('applying filter to seed list');
-        actual = actual.mapIndexed((int index, e) {
-          // print('applying filter $x to seed ${index + 1}');
-          return [...e, filter(e.last)];
-        }).toList();
+        var filter = generateFilterForRange(filterRules);
+        print('applying filter to seed list');
+        actual =
+            actual.expand((element) => filter(element.first, element.length));
+        print(actual);
       }
 
-      var sorted_by_location_asc = actual.sorted((a, b) => a.last - b.last);
-      expect(sorted_by_location_asc[0].last).toBe(46);
+      var sorted_by_location_asc = actual.sorted((a, b) => a.first - b.first);
+      // print(sorted_by_location_asc);
+      expect(sorted_by_location_asc[0].first).toBe(46);
     });
     test(skip: true, 'input file', () {
       var seed_ranges = input_file[0]!.split(" ").map(int.parse).toList();
