@@ -25,46 +25,69 @@ int Function(int e) generateFilter(
       return applicableFilter.dest + offset;
     };
 
-toTuple(Iterable<int> iter) {
-  assert(iter.length == 2);
+({int first, int length}) toTuple(Iterable<dynamic> iter) {
+  // assert(iter.length == 2);
   var iterator = iter.iterator;
   iterator.moveNext();
-  var first = iterator.current;
+  int first = iterator.current;
   iterator.moveNext();
-  return (first: first, length: iterator.current);
+  return (first: first, length: iterator.current as int);
 }
 
-generateFilterForRange(
+Iterable<({int first, int length})> Function(
+    int start, int length) generateFilterForRange(
         List<({int dest, int source, int length})> filterPattern) =>
-    (int start, int length) {
-      var resulting_ranges = [];
+    (int first, int length) {
+      var resulting_ranges = <List<dynamic>>[];
       for (var rule in filterPattern) {
         resulting_ranges.addAll([
           //range entirely before filter pattern
           // x < x +l < src < src + srcl
-          if (rule.source > start + length) [start, length],
+          if (first + length < rule.source) [first, length, 'a'],
           //range starts before and ends within pattern
           // x < src < x+l < src + srcl
-          if (start < rule.source &&
-              start + length >= rule.source &&
-              start + length < rule.source + rule.length) ...[
-            [start, rule.source - 1],
-            [rule.dest, start + length - rule.source]
+          if (first < rule.source &&
+              rule.source < first + length &&
+              first + length < rule.source + rule.length) ...[
+            [first, rule.source - first, 'b1'],
+            [rule.dest, first + length - rule.source, 'b2']
           ],
           //range entirely within filter pattern
           // src < x < x + l < src + srcl
-
+          if (rule.source < first &&
+              first + length <= rule.source + rule.length)
+            [rule.dest + first - rule.source, length, 'c'],
           //range starts before and ends after pattern
           //x < src < src + srcl < x + l
-
+          if (first < rule.source &&
+              rule.source + rule.length <= first + length) ...[
+            [first, rule.source - first, 'd1'],
+            [rule.dest, rule.length, 'd2'],
+            [
+              rule.source + rule.length,
+              (first + length) - (rule.source + rule.length),
+              'd3'
+            ],
+          ],
           //range starts within and ends after pattern
           // src < x < src + srcl < x + l
-
+          if (rule.source < first &&
+              first < rule.source + rule.length &&
+              rule.source + rule.length <= first + length) ...[
+            [
+              rule.dest + first - rule.source,
+              (length) - (first - rule.source + rule.length),
+              'e1'
+            ],
+            [rule.source + rule.length, first - rule.source + rule.length, 'e2']
+          ],
           //range entirely after filter pattern
           // src < src + srcl < x < x + l
-          if (rule.source + rule.length < start) [start, length],
+          if (rule.source + rule.length < first) [first, length, 'f'],
         ]);
       }
+      // print(resulting_ranges);
+      return resulting_ranges.map(toTuple);
     };
 
 void main() {
@@ -339,6 +362,37 @@ void main() {
     });
   });
   group('part 2', () {
+    group('generateFilterForRange', () {
+      // numbers 4 -> 7 should get 10 added to them
+      var filterPattern = [(source: 4, dest: 14, length: 4)];
+      var filter = generateFilterForRange(filterPattern);
+
+      test('all before', () {
+        expect(filter(0, 3)).toEqual([(first: 0, length: 3)]);
+      });
+      test('all after', () {
+        expect(filter(9, 4)).toEqual([(first: 9, length: 4)]);
+      });
+      test('all between', () {
+        expect(filter(5, 2)).toEqual([(first: 15, length: 2)]);
+      });
+      test('start before', () {
+        expect(filter(2, 5))
+            .toEqual([(first: 2, length: 2), (first: 14, length: 3)]);
+      });
+      test('end after', () {
+        expect(filter(5, 8))
+            .toEqual([(first: 15, length: 3), (first: 8, length: 5)]);
+      });
+      test('start before, end after', () {
+        expect(filter(2, 11)).toEqual([
+          (first: 2, length: 2),
+          (first: 14, length: 4),
+          (first: 8, length: 5)
+        ]);
+      });
+    });
+
     test('example', () {
       var seed_ranges =
           example_input[0]!.split(" ").map(int.parse).slices(2).first;
@@ -351,8 +405,7 @@ void main() {
             seed_ranges[seed + 1], (index) => seed_ranges[seed] + index);
         actual.addAll(range.map((e) => [e]));
       }
-      print("${seed_ranges[0]} -> ${seed_ranges[0] + seed_ranges[1] - 1}");
-      print(actual);
+
       for (var x = 1; x <= 7; x++) {
         // print('parsing rule $x');
         var filterSource = example_input[x]!;
