@@ -56,11 +56,6 @@ Iterable<({int first, int length})> Function(int start, int length)
             var [first, length, _] = to_be_processed.removeFirst();
             var matches_any_rule = false;
             for (var rule in filterPattern) {
-              //range entirely before filter pattern
-              // x < x +l < src < src + srcl
-              // if (first + length < rule.source)
-              //   to_be_processed.add([first, length, 'a']);
-
               //range starts before and ends within pattern
               // x < src < x+l < src + srcl
               if (first < rule.source &&
@@ -84,7 +79,7 @@ Iterable<({int first, int length})> Function(int start, int length)
               //range starts before and ends after pattern
               //x < src < src + srcl < x + l
               if (first < rule.source &&
-                  rule.source + rule.length <= first + length) {
+                  rule.source + rule.length < first + length) {
                 matches_any_rule = true;
                 processed_ranges.add([rule.dest, rule.length, 'd2']);
                 to_be_processed.addAll([
@@ -115,14 +110,14 @@ Iterable<({int first, int length})> Function(int start, int length)
                 ]);
               }
 
-              //range entirely after filter pattern
-              // src < src + srcl < x < x + l
-              // if (rule.source + rule.length < first)
-              //   to_be_processed.add([first, length, 'f']);
-
               if (matches_any_rule) break;
             }
             if (!matches_any_rule) {
+              //range entirely before filter patterns
+              // x < x +l < src < src + srcl
+
+              //range entirely after filter patterns
+              // src < src + srcl < x < x + l
               processed_ranges.add([first, length, 'no match']);
             }
           }
