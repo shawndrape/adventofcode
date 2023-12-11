@@ -1,6 +1,3 @@
-import 'dart:math';
-
-import 'package:collection/collection.dart';
 import 'package:spec/spec.dart';
 
 var example_input = {
@@ -68,6 +65,26 @@ void main() {
           .fold(1, (previousValue, e) => previousValue * (e.max - e.min + 1));
 
       expect(error_margin).toEqual(1413720);
+    });
+    group('part 2', () {
+      test('example', () {
+        var single_race = (time: 71530, dist: 940200);
+
+        var (min: min_len, max: max_len) =
+            minAndMaxButtonLengthForRace(single_race.time, single_race.dist);
+        var error_margin = max_len - min_len + 1;
+
+        expect(error_margin).toEqual(71503);
+      });
+      test('input file', () {
+        var single_race = (time: 45988373, dist: 295173412781210);
+
+        var (min: min_len, max: max_len) =
+            minAndMaxButtonLengthForRace(single_race.time, single_race.dist);
+        var error_margin = max_len - min_len + 1;
+
+        expect(error_margin).toEqual(30565288);
+      });
     });
   });
 }
