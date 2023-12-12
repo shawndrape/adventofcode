@@ -96,7 +96,7 @@ zoneight234
 
 In this example, the calibration values are 29, 83, 13, 24, 42, 14, and 76. Adding these together produces 281.
     */
-    int? word_to_digit(String value) => switch (value) {
+    int? wordToDigit(String value) => switch (value) {
           "one" => 1,
           "two" => 2,
           "three" => 3,
@@ -109,26 +109,7 @@ In this example, the calibration values are 29, 83, 13, 24, 42, 14, and 76. Addi
           _ => int.tryParse(value)
         };
 
-    String convert_digits(String value) {
-      var string_buffer = "";
-      var result_string = "";
-
-      var matcher =
-          RegExp(r'.*(\d|one|two|three|four|five|six|seven|eight|nine)');
-
-      for (var char in value.split("")) {
-        string_buffer += char;
-        var match = matcher.firstMatch(string_buffer);
-        if (match == null) continue;
-        // result_string +=
-        //     string_buffer.replaceFirst(match[1]!, word_to_digit(match[1]!));
-        string_buffer = "";
-      }
-
-      return result_string + string_buffer;
-    }
-
-    List<int> extract_digits(String value) {
+    List<int> extractDigits(String value) {
       print("processing $value");
       var results = <int>[];
       var matcher =
@@ -138,24 +119,25 @@ In this example, the calibration values are 29, 83, 13, 24, 42, 14, and 76. Addi
         print('X is $x');
         var match = matcher.matchAsPrefix(value, x);
         if (match == null) break;
-        String match_text = match[1]!;
-        print('found match of: $match_text');
-        var match_value = word_to_digit(match_text);
-        if (match_value == null)
-          throw Exception('Found a non-digit in $match_text');
+        String matchText = match[1]!;
+        print('found match of: $matchText');
+        var matchValue = wordToDigit(matchText);
+        if (matchValue == null) {
+          throw Exception('Found a non-digit in $matchText');
+        }
 
-        results.add(match_value);
-        var chars_to_skip = value.substring(x).indexOf(match_text);
-        print("$match_text starts at position ${x + chars_to_skip} in $value");
-        x += chars_to_skip;
+        results.add(matchValue);
+        var charsToSkip = value.substring(x).indexOf(matchText);
+        print("$matchText starts at position ${x + charsToSkip} in $value");
+        x += charsToSkip;
       }
       return results;
     }
 
     int calibrate(String value) {
-      final List<int> digits = extract_digits(value);
+      final List<int> digits = extractDigits(value);
       print("found digits: $digits");
-      if (digits.length < 1) {
+      if (digits.isEmpty) {
         throw Exception('No number found: $digits from value $value');
       }
       if (digits.length == 1) {
@@ -165,7 +147,7 @@ In this example, the calibration values are 29, 83, 13, 24, 42, 14, and 76. Addi
     }
 
     test('calibration passed for example values', () {
-      final example_inputs = [
+      final exampleInputs = [
         'two1nine',
         'eightwothree',
         'abcone2threexyz',
@@ -175,12 +157,12 @@ In this example, the calibration values are 29, 83, 13, 24, 42, 14, and 76. Addi
         '7pqrstsixteen',
       ];
 
-      final expected_calibrations = [29, 83, 13, 24, 42, 14, 76];
+      final expectedCalibrations = [29, 83, 13, 24, 42, 14, 76];
 
-      var calibrated_values = example_inputs.map(calibrate);
+      var calibratedValues = exampleInputs.map(calibrate);
 
-      expect(calibrated_values, equals(expected_calibrations));
-      expect(calibrated_values.reduce((value, element) => value + element),
+      expect(calibratedValues, equals(expectedCalibrations));
+      expect(calibratedValues.reduce((value, element) => value + element),
           equals(281));
     });
 
@@ -207,7 +189,7 @@ In this example, the calibration values are 29, 83, 13, 24, 42, 14, and 76. Addi
         'fivesjmgr7two',
       ];
 
-      var expected_calibrations = [
+      var expectedCalibrations = [
         51,
         44,
         34,
@@ -224,28 +206,28 @@ In this example, the calibration values are 29, 83, 13, 24, 42, 14, and 76. Addi
         52
       ];
 
-      expect(expected_calibrations, values.map(calibrate));
+      expect(expectedCalibrations, values.map(calibrate));
     });
 
     test('calibration passes for input file', () async {
-      final expected_calibration_sum = 54925;
+      final expectedCalibrationSum = 54925;
 
       final input = File('day1_input.txt');
       final lines =
           input.openRead().transform(utf8.decoder).transform(LineSplitter());
-      var calibration_sum = 0;
+      var calibrationSum = 0;
       try {
         await for (var line in lines) {
-          var calibrated_value = calibrate(line);
-          assert(calibrated_value < 100);
-          calibration_sum += calibrated_value;
+          var calibratedValue = calibrate(line);
+          assert(calibratedValue < 100);
+          calibrationSum += calibratedValue;
         }
       } catch (e) {
         print('oops: $e');
       }
 
-      expect(calibration_sum, lessThan(54953));
-      expect(calibration_sum, equals(expected_calibration_sum));
+      expect(calibrationSum, lessThan(54953));
+      expect(calibrationSum, equals(expectedCalibrationSum));
     });
   });
 }

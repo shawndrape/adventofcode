@@ -21,55 +21,55 @@ Card 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11""";
 
 ({int game, int matches, int score}) getWinnings(String card) {
   var [title, details] = card.split(":");
-  var game_id = int.parse(title.replaceFirst(RegExp(r"Card\s+"), ""));
+  var gameId = int.parse(title.replaceFirst(RegExp(r"Card\s+"), ""));
 
-  var [winning_numbers, chosen_numbers] = details.split("|");
-  var winning_ints =
-      winning_numbers.trim().split(RegExp(r'\s+')).map(int.parse).toSet();
-  var matches = chosen_numbers
+  var [winningNumbers, chosenNumbers] = details.split("|");
+  var winningInts =
+      winningNumbers.trim().split(RegExp(r'\s+')).map(int.parse).toSet();
+  var matches = chosenNumbers
       .trim()
       .split(RegExp(r'\s+'))
       .map(int.parse)
-      .where((element) => winning_ints.contains(element))
+      .where((element) => winningInts.contains(element))
       .length;
 
-  return (game: game_id, matches: matches, score: pointsForGame(matches));
+  return (game: gameId, matches: matches, score: pointsForGame(matches));
 }
 
 class Card {
   int id;
-  Set<int> winning_numbers;
-  List<int> chosen_numbers;
+  Set<int> winningNumbers;
+  List<int> chosenNumbers;
 
-  Card(this.id, this.winning_numbers, this.chosen_numbers);
+  Card(this.id, this.winningNumbers, this.chosenNumbers);
 
-  factory Card.fromLine(String card_line) {
-    var [title, details] = card_line.split(":");
-    var game_id = int.parse(title.replaceFirst(RegExp(r"Card\s+"), ""));
+  factory Card.fromLine(String cardLine) {
+    var [title, details] = cardLine.split(":");
+    var gameId = int.parse(title.replaceFirst(RegExp(r"Card\s+"), ""));
 
-    var [winning_numbers, chosen_numbers] = details.split("|");
-    var winning_ints =
-        winning_numbers.trim().split(RegExp(r'\s+')).map(int.parse).toSet();
-    var chosen_ints =
-        chosen_numbers.trim().split(RegExp(r'\s+')).map(int.parse).toList();
-    return Card(game_id, winning_ints, chosen_ints);
+    var [winningNumbers, chosenNumbers] = details.split("|");
+    var winningInts =
+        winningNumbers.trim().split(RegExp(r'\s+')).map(int.parse).toSet();
+    var chosenInts =
+        chosenNumbers.trim().split(RegExp(r'\s+')).map(int.parse).toList();
+    return Card(gameId, winningInts, chosenInts);
   }
 
   int get matches =>
-      chosen_numbers.where((e) => winning_numbers.contains(e)).length;
+      chosenNumbers.where((e) => winningNumbers.contains(e)).length;
 
-  List<int> get additional_cards =>
+  List<int> get additionalCards =>
       [for (var i = id + 1; i <= id + matches; i++) i];
 }
 
 void main() {
   group('part 1', () {
     test('example', () {
-      var expected_winnings = [8, 2, 2, 1, 0, 0];
+      var expectedWinnings = [8, 2, 2, 1, 0, 0];
 
       var results = example.split("\n").map(getWinnings).map((e) => e.score);
 
-      expect(results).toEqual(expected_winnings);
+      expect(results).toEqual(expectedWinnings);
       expect(results.sum).toBe(13);
     });
     test('input file', () async {
@@ -77,13 +77,13 @@ void main() {
       final lines =
           input.openRead().transform(utf8.decoder).transform(LineSplitter());
 
-      var card_winning_sum = 0;
+      var cardWinningSum = 0;
       await for (var card in lines) {
-        card_winning_sum += getWinnings(card).score;
+        cardWinningSum += getWinnings(card).score;
       }
 
-      expect(card_winning_sum).greaterThan(472);
-      expect(card_winning_sum).toBe(22488);
+      expect(cardWinningSum).greaterThan(472);
+      expect(cardWinningSum).toBe(22488);
     });
   });
   group('part 2', () {
@@ -121,15 +121,16 @@ void main() {
   });
 }
 
-Future<Map<int, int>> countCards(Stream<String> card_summary) async {
+Future<Map<int, int>> countCards(Stream<String> cardSummary) async {
   var cardCounts = <int, int>{};
 
-  await for (var line in card_summary) {
+  await for (var line in cardSummary) {
     var card = Card.fromLine(line);
     cardCounts[card.id] ??= 1;
-    var num_of_cards = cardCounts[card.id]!;
-    for (var won_card in card.additional_cards)
-      cardCounts[won_card] = (cardCounts[won_card] ?? 1) + num_of_cards;
+    var numOfCards = cardCounts[card.id]!;
+    for (var wonCard in card.additionalCards) {
+      cardCounts[wonCard] = (cardCounts[wonCard] ?? 1) + numOfCards;
+    }
   }
   return cardCounts;
 }

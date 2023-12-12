@@ -38,97 +38,97 @@ int Function(int e) generateFilter(
 var counter = 0;
 printWithCounter(String message) {
   counter++;
-  print('[$counter] ' + message);
+  print('[$counter] $message');
 }
 
 // start with a single queue
 // pop range and check all filter rules
 // if one filter clips, process the overlap and queue the remainder
 
-Iterable<({int first, int length})> Function(int start, int length)
-    generateFilterForRange(
-            List<({int dest, int source, int length})> filterPattern) =>
-        (int OGfirst, int OGlength) {
-          var to_be_processed = QueueList<List<dynamic>>();
-          var processed_ranges = <List<dynamic>>[];
-          to_be_processed.add([OGfirst, OGlength, 'OG']);
-          while (to_be_processed.isNotEmpty) {
-            var [first, length, _] = to_be_processed.removeFirst();
-            var matches_any_rule = false;
-            for (var rule in filterPattern) {
-              //range starts before and ends within pattern
-              // x < src < x+l < src + srcl
-              if (first < rule.source &&
-                  rule.source < first + length &&
-                  first + length <= rule.source + rule.length) {
-                matches_any_rule = true;
-                to_be_processed.add([first, rule.source - first, 'b1']);
-                processed_ranges
-                    .add([rule.dest, first + length - rule.source, 'b2']);
-              }
-
-              //range entirely within filter pattern
-              // src < x < x + l < src + srcl
-              if (rule.source <= first &&
-                  first + length <= rule.source + rule.length) {
-                matches_any_rule = true;
-                processed_ranges
-                    .add([rule.dest + first - rule.source, length, 'c']);
-              }
-
-              //range starts before and ends after pattern
-              //x < src < src + srcl < x + l
-              if (first < rule.source &&
-                  rule.source + rule.length < first + length) {
-                matches_any_rule = true;
-                processed_ranges.add([rule.dest, rule.length, 'd2']);
-                to_be_processed.addAll([
-                  [first, rule.source - first, 'd1'],
-                  [
-                    rule.source + rule.length,
-                    (first + length) - (rule.source + rule.length),
-                    'd3'
-                  ],
-                ]);
-              }
-
-              //range starts within and ends after pattern
-              // src < x < src + srcl < x + l
-              if (rule.source < first &&
-                  first < rule.source + rule.length &&
-                  rule.source + rule.length < first + length) {
-                matches_any_rule = true;
-                processed_ranges.add([
-                  rule.dest + first - rule.source,
-                  (rule.source + rule.length - first),
-                  'e1'
-                ]);
-                to_be_processed.add([
-                  rule.source + rule.length,
-                  length - (rule.source + rule.length - first),
-                  'e2'
-                ]);
-              }
-
-              if (matches_any_rule) break;
-            }
-            if (!matches_any_rule) {
-              //range entirely before filter patterns
-              // x < x +l < src < src + srcl
-
-              //range entirely after filter patterns
-              // src < src + srcl < x < x + l
-              processed_ranges.add([first, length, 'no match']);
-            }
+Iterable<({int first, int length})> Function(
+    int start, int length) generateFilterForRange(
+        List<({int dest, int source, int length})> filterPattern) =>
+    (int firstOG, int lengthOG) {
+      var toBeProcessed = QueueList<List<dynamic>>();
+      var processedRanges = <List<dynamic>>[];
+      toBeProcessed.add([firstOG, lengthOG, 'OG']);
+      while (toBeProcessed.isNotEmpty) {
+        var [first, length, _] = toBeProcessed.removeFirst();
+        var matchesAnyRule = false;
+        for (var rule in filterPattern) {
+          //range starts before and ends within pattern
+          // x < src < x+l < src + srcl
+          if (first < rule.source &&
+              rule.source < first + length &&
+              first + length <= rule.source + rule.length) {
+            matchesAnyRule = true;
+            toBeProcessed.add([first, rule.source - first, 'b1']);
+            processedRanges
+                .add([rule.dest, first + length - rule.source, 'b2']);
           }
 
-          if (processed_ranges.any((element) => element[1] <= 0))
-            throw Exception('Unexpected empty or negative ranges');
-          return processed_ranges.map(toTuple);
-        };
+          //range entirely within filter pattern
+          // src < x < x + l < src + srcl
+          if (rule.source <= first &&
+              first + length <= rule.source + rule.length) {
+            matchesAnyRule = true;
+            processedRanges.add([rule.dest + first - rule.source, length, 'c']);
+          }
+
+          //range starts before and ends after pattern
+          //x < src < src + srcl < x + l
+          if (first < rule.source &&
+              rule.source + rule.length < first + length) {
+            matchesAnyRule = true;
+            processedRanges.add([rule.dest, rule.length, 'd2']);
+            toBeProcessed.addAll([
+              [first, rule.source - first, 'd1'],
+              [
+                rule.source + rule.length,
+                (first + length) - (rule.source + rule.length),
+                'd3'
+              ],
+            ]);
+          }
+
+          //range starts within and ends after pattern
+          // src < x < src + srcl < x + l
+          if (rule.source < first &&
+              first < rule.source + rule.length &&
+              rule.source + rule.length < first + length) {
+            matchesAnyRule = true;
+            processedRanges.add([
+              rule.dest + first - rule.source,
+              (rule.source + rule.length - first),
+              'e1'
+            ]);
+            toBeProcessed.add([
+              rule.source + rule.length,
+              length - (rule.source + rule.length - first),
+              'e2'
+            ]);
+          }
+
+          if (matchesAnyRule) break;
+        }
+        if (!matchesAnyRule) {
+          //range entirely before filter patterns
+          // x < x +l < src < src + srcl
+
+          //range entirely after filter patterns
+          // src < src + srcl < x < x + l
+          processedRanges.add([first, length, 'no match']);
+        }
+      }
+
+      if (processedRanges.any((element) => element[1] <= 0)) {
+        throw Exception('Unexpected empty or negative ranges');
+      }
+      return processedRanges.map(toTuple);
+    };
 
 void main() {
-  const example_input = {
+  const exampleInput = {
     0: "79 14 55 13",
     1: """50 98 2
 52 50 48""",
@@ -150,7 +150,7 @@ void main() {
 56 93 4""",
   };
 
-  const input_file = {
+  const inputFile = {
     0: "630335678 71155519 260178142 125005421 1548082684 519777283 4104586697 30692976 1018893962 410959790 3570781652 45062110 74139777 106006724 3262608046 213460151 3022784256 121993130 2138898608 36769984",
     1: """2977255263 3423361099 161177662
 3464809483 1524036300 40280620
@@ -357,18 +357,18 @@ void main() {
       Seed 55, soil 57, fertilizer 57, water 53, light 46, temperature 82, humidity 82, location 86.
       Seed 13, soil 13, fertilizer 52, water 41, light 34, temperature 34, humidity 35, location 35.
       */
-      var expected_values_array = [
+      var expectedValuesArray = [
         [79, 81, 81, 81, 74, 78, 78, 82],
         [14, 14, 53, 49, 42, 42, 43, 43],
         [55, 57, 57, 53, 46, 82, 82, 86],
         [13, 13, 52, 41, 34, 34, 35, 35],
       ];
 
-      var actual = example_input[0]!.split(" ").map(int.parse).map((e) => [e]);
+      var actual = exampleInput[0]!.split(" ").map(int.parse).map((e) => [e]);
 
       for (var x = 1; x <= 7; x++) {
         // print('parsing rule $x');
-        var filterSource = example_input[x]!;
+        var filterSource = exampleInput[x]!;
         var filterRules = parseFilter(filterSource);
         var filter = generateFilter(filterRules);
         // print('applying filter to seed list');
@@ -377,25 +377,25 @@ void main() {
           return [...e, filter(e.last)];
         });
       }
-      expect(actual).toEqual(expected_values_array);
+      expect(actual).toEqual(expectedValuesArray);
 
-      var sorted_by_location_asc = actual.sorted((a, b) => a.last - b.last);
-      expect(sorted_by_location_asc[0].last).toBe(35);
+      var sortedByLocationAsc = actual.sorted((a, b) => a.last - b.last);
+      expect(sortedByLocationAsc[0].last).toBe(35);
     });
     test('input file', () {
       //file structure not worth parsing into blocks, so it's been copied
 
-      var actual = input_file[0]!.split(" ").map(int.parse).map((e) => [e]);
+      var actual = inputFile[0]!.split(" ").map(int.parse).map((e) => [e]);
 
       for (var x = 1; x <= 7; x++) {
-        var filterSource = input_file[x]!;
+        var filterSource = inputFile[x]!;
         var filterRules = parseFilter(filterSource);
         var filter = generateFilter(filterRules);
         actual = actual.map((e) => [...e, filter(e.last)]);
       }
 
-      var sorted_by_location_asc = actual.sorted((a, b) => a.last - b.last);
-      expect(sorted_by_location_asc[0].last).toBe(51580674);
+      var sortedByLocationAsc = actual.sorted((a, b) => a.last - b.last);
+      expect(sortedByLocationAsc[0].last).toBe(51580674);
     });
   });
   group('part 2', () {
@@ -439,16 +439,16 @@ void main() {
     });
 
     test('example', () {
-      var seed_ranges = example_input[0]!.split(" ").map(int.parse);
-      var grouped_ranges = seed_ranges.slices(2);
+      var seedRanges = exampleInput[0]!.split(" ").map(int.parse);
+      var groupedRanges = seedRanges.slices(2);
       //using first for now because example confirms the correct lowest location
       //comes from the first range
 
-      var actual = grouped_ranges.map((e) => (first: e[0], length: e[1]));
+      var actual = groupedRanges.map((e) => (first: e[0], length: e[1]));
 
       print('should only print once: $actual');
       for (var x = 1; x <= 7; x++) {
-        var filterSource = example_input[x]!;
+        var filterSource = exampleInput[x]!;
         var filterRules = parseFilter(filterSource);
         var filter = generateFilterForRange(filterRules);
         actual = actual
@@ -457,17 +457,17 @@ void main() {
         print('Actual after pass $x: $actual');
       }
 
-      var sorted_by_location_asc = actual.sorted((a, b) => a.first - b.first);
-      expect(sorted_by_location_asc[0].first).toBe(46);
+      var sortedByLocationAsc = actual.sorted((a, b) => a.first - b.first);
+      expect(sortedByLocationAsc[0].first).toBe(46);
     });
     test('input file', () {
-      var seed_ranges = input_file[0]!.split(" ").map(int.parse);
-      var grouped_ranges = seed_ranges.slices(2);
+      var seedRanges = inputFile[0]!.split(" ").map(int.parse);
+      var groupedRanges = seedRanges.slices(2);
 
-      var actual = grouped_ranges.map((e) => (first: e[0], length: e[1]));
+      var actual = groupedRanges.map((e) => (first: e[0], length: e[1]));
 
       for (var x = 1; x <= 7; x++) {
-        var filterSource = example_input[x]!;
+        var filterSource = exampleInput[x]!;
         var filterRules = parseFilter(filterSource);
         var filter = generateFilterForRange(filterRules);
         actual = actual
@@ -475,10 +475,10 @@ void main() {
             .toList();
       }
 
-      var sorted_by_location_asc = actual.sorted((a, b) => a.first - b.first);
+      var sortedByLocationAsc = actual.sorted((a, b) => a.first - b.first);
 
-      expect(sorted_by_location_asc[0].first).greaterThan(74139777);
-      expect(sorted_by_location_asc[0].first).lessThan(260178142);
+      expect(sortedByLocationAsc[0].first).greaterThan(74139777);
+      expect(sortedByLocationAsc[0].first).lessThan(260178142);
     });
   });
 }

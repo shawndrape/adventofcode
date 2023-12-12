@@ -1,6 +1,6 @@
 import 'package:spec/spec.dart';
 
-var example_input = {
+var exampleInput = {
   1: (time: 7, dist: 9),
   2: (time: 15, dist: 40),
   3: (time: 30, dist: 200),
@@ -10,7 +10,7 @@ var example_input = {
 Time:        45     98     83     73
 Distance:   295   1734   1278   1210
 */
-var input_file = {
+var inputFile = {
   (time: 45, dist: 295),
   (time: 98, dist: 1734),
   (time: 83, dist: 1278),
@@ -20,22 +20,22 @@ var input_file = {
 distanceFromLength(int time, int length) => (time - length) * length;
 
 ({int min, int max}) minAndMaxButtonLengthForRace(int time, int dist) {
-  var min_button_length, max_button_length;
+  int minButtonLength = 0, maxButtonLength = 0;
   for (var len = 1; len < time; len++) {
     if (distanceFromLength(time, len) > dist) {
-      min_button_length = len;
+      minButtonLength = len;
       break;
     }
   }
 
   for (var len = time - 1; len >= 1; len--) {
     if (distanceFromLength(time, len) > dist) {
-      max_button_length = len;
+      maxButtonLength = len;
       break;
     }
   }
 
-  return (min: min_button_length, max: max_button_length);
+  return (min: minButtonLength, max: maxButtonLength);
 }
 
 void main() {
@@ -47,43 +47,42 @@ void main() {
         3: (min: 11, max: 19)
       };
 
-      for (var MapEntry(:key, value: race_details) in example_input.entries) {
-        expect(minAndMaxButtonLengthForRace(
-                race_details.time, race_details.dist))
+      for (var MapEntry(:key, value: raceDetails) in exampleInput.entries) {
+        expect(minAndMaxButtonLengthForRace(raceDetails.time, raceDetails.dist))
             .toEqual(expected[key]!);
       }
 
-      var error_margin = example_input.values
+      var errorMargin = exampleInput.values
           .map((e) => minAndMaxButtonLengthForRace(e.time, e.dist))
           .fold(1, (previousValue, e) => previousValue * (e.max - e.min + 1));
 
-      expect(error_margin).toEqual(288);
+      expect(errorMargin).toEqual(288);
     });
     test('input file', () {
-      var error_margin = input_file
+      var errorMargin = inputFile
           .map((e) => minAndMaxButtonLengthForRace(e.time, e.dist))
           .fold(1, (previousValue, e) => previousValue * (e.max - e.min + 1));
 
-      expect(error_margin).toEqual(1413720);
+      expect(errorMargin).toEqual(1413720);
     });
     group('part 2', () {
       test('example', () {
-        var single_race = (time: 71530, dist: 940200);
+        var singleRace = (time: 71530, dist: 940200);
 
-        var (min: min_len, max: max_len) =
-            minAndMaxButtonLengthForRace(single_race.time, single_race.dist);
-        var error_margin = max_len - min_len + 1;
+        var (min: minLength, max: maxLength) =
+            minAndMaxButtonLengthForRace(singleRace.time, singleRace.dist);
+        var errorMargin = maxLength - minLength + 1;
 
-        expect(error_margin).toEqual(71503);
+        expect(errorMargin).toEqual(71503);
       });
       test('input file', () {
-        var single_race = (time: 45988373, dist: 295173412781210);
+        var singleRace = (time: 45988373, dist: 295173412781210);
 
-        var (min: min_len, max: max_len) =
-            minAndMaxButtonLengthForRace(single_race.time, single_race.dist);
-        var error_margin = max_len - min_len + 1;
+        var (min: minLength, max: maxLength) =
+            minAndMaxButtonLengthForRace(singleRace.time, singleRace.dist);
+        var errorMargin = maxLength - minLength + 1;
 
-        expect(error_margin).toEqual(30565288);
+        expect(errorMargin).toEqual(30565288);
       });
     });
   });

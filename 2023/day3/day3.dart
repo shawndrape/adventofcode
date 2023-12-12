@@ -1,3 +1,5 @@
+// ignore_for_file: empty_catches
+
 import 'dart:io';
 
 import 'package:collection/collection.dart';
@@ -12,11 +14,11 @@ List<List<String>> traversableSchematic(String schematic) {
 }
 
 enum Node {
-  ALPHA,
-  SYMBOL,
-  PERIOD,
-  DIGIT,
-  UNKNOWN,
+  alpha,
+  symbol,
+  period,
+  digit,
+  unknown,
 }
 
 ///based on https://www.rapidtables.com/code/text/ascii-table.html
@@ -25,39 +27,39 @@ Node getNodeType(String char) {
 
   switch (charCode) {
     case 46:
-      return Node.PERIOD;
+      return Node.period;
     case >= 48 && < 58:
-      return Node.DIGIT;
+      return Node.digit;
     case >= 65 && < 91:
     case >= 97 && < 123:
-      return Node.ALPHA;
+      return Node.alpha;
     default:
-      return Node.SYMBOL;
+      return Node.symbol;
   }
 }
 
 List<int> extractNumbers(List<List<String>> schem, ({int x, int y}) point) {
   var result = <int>[];
 
-  var min_x = 0;
-  var min_y = 0;
-  var max_y = schem.length - 1;
-  var max_x = schem[0].length - 1;
+  var minX = 0;
+  var minY = 0;
+  var maxY = schem.length - 1;
+  var maxX = schem[0].length - 1;
 
   //starting from point's top-left (-1, -1), scan for digits
   for (var y = -1; y <= 1; y++) {
     for (var x = -1; x <= 1; x++) {
       if (x == 0 && y == 0) continue;
-      if (point.x + x < min_x || point.x + x > max_x) continue;
-      if (point.y + y < min_y || point.y + y > max_y) continue;
-      var curr_point = (x: point.x + x, y: point.y + y);
-      if (getNodeType(schem[curr_point.y][curr_point.x]) != Node.DIGIT)
+      if (point.x + x < minX || point.x + x > maxX) continue;
+      if (point.y + y < minY || point.y + y > maxY) continue;
+      var currPoint = (x: point.x + x, y: point.y + y);
+      if (getNodeType(schem[currPoint.y][currPoint.x]) != Node.digit) {
         continue;
+      }
 
-      var (found_number, shift_x) =
-          pullNumber(schem[curr_point.y], curr_point.x);
-      result.add(found_number);
-      x += shift_x;
+      var (foundNumber, shiftX) = pullNumber(schem[currPoint.y], currPoint.x);
+      result.add(foundNumber);
+      x += shiftX;
     }
   }
   return result;
@@ -66,16 +68,20 @@ List<int> extractNumbers(List<List<String>> schem, ({int x, int y}) point) {
 ///assumption: cursor already confirmed to be a digit
 ///found a number! Traverse X-axis in both directions until no longer on a digit
 (int, int) pullNumber(List<String> line, int cursor) {
-  var left_bound = -1, right_bound = 1;
+  var leftBound = -1, rightBound = 1;
   try {
-    while (getNodeType(line[cursor + left_bound]) == Node.DIGIT) left_bound--;
+    while (getNodeType(line[cursor + leftBound]) == Node.digit) {
+      leftBound--;
+    }
   } on RangeError {}
   try {
-    while (getNodeType(line[cursor + right_bound]) == Node.DIGIT) right_bound++;
+    while (getNodeType(line[cursor + rightBound]) == Node.digit) {
+      rightBound++;
+    }
   } on RangeError {}
-  int found_number = int.parse(
-      line.sublist(cursor + left_bound + 1, cursor + right_bound).join());
-  return (found_number, right_bound - 1);
+  int foundNumber = int.parse(
+      line.sublist(cursor + leftBound + 1, cursor + rightBound).join());
+  return (foundNumber, rightBound - 1);
 }
 
 Iterable<int> analyzeSchematic(String schematic,
@@ -84,7 +90,7 @@ Iterable<int> analyzeSchematic(String schematic,
   var traversable = traversableSchematic(schematic);
   for (var y = 0; y < traversable.length; y++) {
     for (var x = 0; x < traversable[y].length; x++) {
-      if (getNodeType(traversable[y][x]) == Node.SYMBOL) {
+      if (getNodeType(traversable[y][x]) == Node.symbol) {
         if (checkGearsOnly && traversable[y][x] != '*') continue;
         var extracted = extractNumbers(traversable, (x: x, y: y));
         if (checkGearsOnly && extracted.length == 2) {
@@ -98,7 +104,7 @@ Iterable<int> analyzeSchematic(String schematic,
   return result;
 }
 
-var example_schematic = r'''
+var exampleSchematic = r'''
 467..114..
 ...*......
 ..35..633.
@@ -110,17 +116,17 @@ var example_schematic = r'''
 ...$.*....
 .664.598..''';
 
-var valid_example_numbers = {467, 35, 633, 617, 592, 755, 664, 598};
+var validExampleNumbers = {467, 35, 633, 617, 592, 755, 664, 598};
 
 void main() {
   group('part 1', () {
     test('test isSymbol', () {
       var sets = [
-        (',', Node.SYMBOL),
-        ('a', Node.ALPHA),
-        ('.', Node.PERIOD),
-        ('9', Node.DIGIT),
-        (r'$', Node.SYMBOL),
+        (',', Node.symbol),
+        ('a', Node.alpha),
+        ('.', Node.period),
+        ('9', Node.digit),
+        (r'$', Node.symbol),
       ];
       for (var i in sets) {
         expect(getNodeType(i.$1)).toEqual(i.$2);
@@ -137,10 +143,10 @@ void main() {
       expect(pullNumber(test3, 5).$1).toEqual(6789);
     });
     test('example', () {
-      var extracted_schematic_numbers = analyzeSchematic(example_schematic);
+      var extractedSchematicNumbers = analyzeSchematic(exampleSchematic);
 
-      expect(extracted_schematic_numbers).toEqual(valid_example_numbers);
-      expect(extracted_schematic_numbers.sum).toEqual(4361);
+      expect(extractedSchematicNumbers).toEqual(validExampleNumbers);
+      expect(extractedSchematicNumbers.sum).toEqual(4361);
     });
     test('duplicate numbers around a symbol', () {
       var input = r'''51.
@@ -156,30 +162,19 @@ void main() {
     });
     test('input file', () async {
       // ignore: unused_local_variable
-      var detected_symbols = {
-        '-',
-        '#',
-        '=',
-        '*',
-        '+',
-        '@',
-        r'$',
-        '&',
-        '/',
-        '%'
-      };
+      var detectedSymbols = {'-', '#', '=', '*', '+', '@', r'$', '&', '/', '%'};
       var file = File('day3_input.txt');
       var input = await file.readAsString();
 
-      var discovered_numbers = analyzeSchematic(input);
-      expect(discovered_numbers.sum).greaterThan(333179);
-      expect(discovered_numbers.sum).toEqual(556367);
+      var discoveredNumbers = analyzeSchematic(input);
+      expect(discoveredNumbers.sum).greaterThan(333179);
+      expect(discoveredNumbers.sum).toEqual(556367);
     });
   });
   group('part 2', () {
     test('example', () {
       var extractedGearRatios =
-          analyzeSchematic(example_schematic, checkGearsOnly: true);
+          analyzeSchematic(exampleSchematic, checkGearsOnly: true);
 
       expect(extractedGearRatios.sum).toBe(467835);
     });
@@ -187,8 +182,8 @@ void main() {
       var file = File('day3_input.txt');
       var input = await file.readAsString();
 
-      var discovered_ratios = analyzeSchematic(input, checkGearsOnly: true);
-      expect(discovered_ratios.sum).toBe(89471771);
+      var discoveredRatios = analyzeSchematic(input, checkGearsOnly: true);
+      expect(discoveredRatios.sum).toBe(89471771);
     });
   });
 }

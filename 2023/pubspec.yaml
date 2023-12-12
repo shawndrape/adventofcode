@@ -6,3 +6,5 @@ dependencies:
   collection: ^1.18.0
   spec: ^0.2.3
   test: any
+dev_dependencies:
+  lints: ^3.0.0

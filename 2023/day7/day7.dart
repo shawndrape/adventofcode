@@ -3,129 +3,129 @@ import 'dart:io';
 import 'package:collection/collection.dart';
 import 'package:spec/spec.dart';
 
-String card_ordering = "AKQJT98765432";
-String card_ordering_with_jokers = "AKQT98765432J";
+String cardOrdering = "AKQJT98765432";
+String cardOrderingWithJokers = "AKQT98765432J";
 
 enum HandType {
-  Unknown,
-  HighCard,
-  OnePair,
-  TwoPair,
-  ThreeKind,
-  FullHouse,
-  FourKind,
-  FiveKind
+  unknown,
+  highCard,
+  onePair,
+  twoPair,
+  threeKind,
+  fullHouse,
+  fourKind,
+  fiveKind
 }
 
 class Hand implements Comparable<Hand> {
   String cards;
   int bid;
-  bool using_jokers;
+  bool usingJokers;
 
-  Hand(this.cards, [this.bid = 0, this.using_jokers = false])
+  Hand(this.cards, [this.bid = 0, this.usingJokers = false])
       : assert(
-            cards.split('').every((element) => card_ordering.contains(element)),
+            cards.split('').every((element) => cardOrdering.contains(element)),
             'Invalid Hand'),
         assert(cards.length == 5, 'Not enough cards');
 
-  bool get hand_has_jokers => using_jokers && cards.contains("J");
+  bool get hasJokers => usingJokers && cards.contains("J");
 
-  int get num_of_jokers => cards.split("").where((e) => e == "J").length;
+  int get numOfJokers => cards.split("").where((e) => e == "J").length;
 
   //general approach: make a map of the characters and determine based on
   // counts and lengths in map
   HandType get type {
-    return !hand_has_jokers
+    return !hasJokers
         ? _handAnalyzerWithoutJokers()
         : _handAnalyzerWithJokers();
   }
 
   HandType _handAnalyzerWithoutJokers() {
-    var char_count = <String, int>{};
+    var charCount = <String, int>{};
     cards.split('').forEach((e) {
-      char_count[e] = (char_count[e] ?? 0) + 1;
+      charCount[e] = (charCount[e] ?? 0) + 1;
     });
-    var combinations = char_count.values.toList();
+    var combinations = charCount.values.toList();
     combinations.sort();
     switch (combinations.reversed.toList()) {
       case [5]:
-        return HandType.FiveKind;
+        return HandType.fiveKind;
       case [4, 1]:
-        return HandType.FourKind;
+        return HandType.fourKind;
       case [3, 2]:
-        return HandType.FullHouse;
+        return HandType.fullHouse;
       case [3, 1, 1]:
-        return HandType.ThreeKind;
+        return HandType.threeKind;
       case [2, 2, 1]:
-        return HandType.TwoPair;
+        return HandType.twoPair;
       case [2, 1, 1, 1]:
-        return HandType.OnePair;
+        return HandType.onePair;
       case [1, 1, 1, 1, 1]:
-        return HandType.HighCard;
+        return HandType.highCard;
       default:
-        return HandType.Unknown;
+        return HandType.unknown;
     }
   }
 
   HandType _handAnalyzerWithJokers() {
-    if (cards == "JJJJJ") return HandType.FiveKind;
-    var char_count = <String, int>{};
+    if (cards == "JJJJJ") return HandType.fiveKind;
+    var charCount = <String, int>{};
     cards.split('').forEach((e) {
-      char_count[e] = (char_count[e] ?? 0) + 1;
+      charCount[e] = (charCount[e] ?? 0) + 1;
     });
-    var current_num_of_jokers = char_count.remove("J") ?? 0;
-    var most_frequent_card, highest_count = 0;
-    for (var MapEntry(:key, :value) in char_count.entries) {
-      if (value > highest_count) {
-        most_frequent_card = key;
-        highest_count = value;
+    var currentNumOfJokers = charCount.remove("J") ?? 0;
+    String mostFrequentCard = '';
+    var highestCount = 0;
+    for (var MapEntry(:key, :value) in charCount.entries) {
+      if (value > highestCount) {
+        mostFrequentCard = key;
+        highestCount = value;
       }
     }
-    char_count[most_frequent_card] =
-        char_count[most_frequent_card]! + current_num_of_jokers;
-    //TODO - pattern matching can't mix literals and variables, so go through
-    //the char_count and add the jokers to the highest value remaining
-    // Edge case: Oops all jokers
-    var combinations = char_count.values.toList();
+    charCount[mostFrequentCard] =
+        charCount[mostFrequentCard]! + currentNumOfJokers;
+
+    var combinations = charCount.values.toList();
     combinations.sort();
     switch (combinations.reversed.toList()) {
       case [5]:
-        return HandType.FiveKind;
+        return HandType.fiveKind;
       case [4, 1]:
-        return HandType.FourKind;
+        return HandType.fourKind;
       case [3, 2]:
-        return HandType.FullHouse;
+        return HandType.fullHouse;
       case [3, 1, 1]:
-        return HandType.ThreeKind;
+        return HandType.threeKind;
       case [2, 2, 1]:
-        return HandType.TwoPair;
+        return HandType.twoPair;
       case [2, 1, 1, 1]:
-        return HandType.OnePair;
+        return HandType.onePair;
       case [1, 1, 1, 1, 1]:
-        return HandType.HighCard;
+        return HandType.highCard;
       default:
-        return HandType.Unknown;
+        return HandType.unknown;
     }
   }
 
   @override
   int compareTo(Hand other) {
     //reject mismatched joker rules
-    assert(using_jokers == other.using_jokers,
+    assert(usingJokers == other.usingJokers,
         'Can not compare joker and non-joker rules');
     //same hand
-    if (this.cards == other.cards) return 0;
+    if (cards == other.cards) return 0;
     //rank hand type
-    if (this.type != other.type) return other.type.index - this.type.index;
+    if (type != other.type) return other.type.index - type.index;
     //compare card ordering
-    var ordering_to_use =
-        using_jokers ? card_ordering_with_jokers : card_ordering;
-    var ordering_reversed = ordering_to_use.split('').reversed.join();
+    var orderingToUse = usingJokers ? cardOrderingWithJokers : cardOrdering;
+    var orderingReversed = orderingToUse.split('').reversed.join();
     var index = 0;
     try {
-      while (this.cards[index] == other.cards[index]) index++;
-      return ordering_reversed.indexOf(other.cards[index]) -
-          ordering_reversed.indexOf(this.cards[index]);
+      while (cards[index] == other.cards[index]) {
+        index++;
+      }
+      return orderingReversed.indexOf(other.cards[index]) -
+          orderingReversed.indexOf(cards[index]);
     } on RangeError {
       //if we exceeded indexes without finding different values, the hands are equal
       return 0;
@@ -133,7 +133,7 @@ class Hand implements Comparable<Hand> {
   }
 }
 
-var example_input = """32T3K 765
+var exampleInput = """32T3K 765
 T55J5 684
 KK677 28
 KTJJT 220
@@ -150,23 +150,23 @@ void main() {
     test('compareTo equal', () {
       expect(Hand("AK222").compareTo(Hand("AK222"))).toBe(0);
     });
-    [
-      ("AAAAA", HandType.FiveKind),
-      ("KKKJJ", HandType.FullHouse),
-      ("98877", HandType.TwoPair),
-      ("98765", HandType.HighCard),
-      ("AKKKK", HandType.FourKind),
-      ("AKKKT", HandType.ThreeKind),
-      ("8K768", HandType.OnePair),
-    ].forEach((e) {
+    for (var e in [
+      ("AAAAA", HandType.fiveKind),
+      ("KKKJJ", HandType.fullHouse),
+      ("98877", HandType.twoPair),
+      ("98765", HandType.highCard),
+      ("AKKKK", HandType.fourKind),
+      ("AKKKT", HandType.threeKind),
+      ("8K768", HandType.onePair),
+    ]) {
       test('hand ${e.$1} has type ${e.$2}', () {
         expect(Hand(e.$1).type).toBe(e.$2);
       });
-    });
+    }
   });
   group('part 1', () {
     test('example', () {
-      var hands = example_input.split('\n').map((e) {
+      var hands = exampleInput.split('\n').map((e) {
         var [cards, bid] = e.split(" ");
         return Hand(cards, int.parse(bid));
       }).toList();
@@ -193,9 +193,9 @@ void main() {
       expect(winnings).toEqual(252052080);
     });
   });
-  group(solo: true, 'part 2', () {
+  group('part 2', () {
     test('example', () {
-      var hands = example_input.split('\n').map((e) {
+      var hands = exampleInput.split('\n').map((e) {
         var [cards, bid] = e.split(" ");
         return Hand(cards, int.parse(bid), true);
       }).toList();
