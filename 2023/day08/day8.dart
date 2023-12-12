@@ -54,8 +54,11 @@ Future<int> walkPathToTargetPart2(Stream<String> pathData) async {
   var (ordering, _, nodes) = await parseInput(pathData);
   //get the starting set of nodes
   var currentNodes = nodes.keys.where((element) => element.endsWith("A"));
+  print('starting with nodes $currentNodes');
 
   allEndWithZ(Iterable<String> l) => l.every((e) => e.endsWith("Z"));
+
+  // TODO - run through each node in starting set solo, then find Lowest Common Multiple
 
   var stepCounter = 0, iter = ordering.iterator;
   while (!allEndWithZ(currentNodes) && iter.moveNext()) {
@@ -68,9 +71,9 @@ Future<int> walkPathToTargetPart2(Stream<String> pathData) async {
         "R" => stepOptions.r,
         _ => throw FormatException("Invalid"),
       };
-    });
+    }).toList();
 
-    stepCounter++;
+    print(stepCounter++);
   }
   print(currentNodes);
   return stepCounter;
@@ -139,6 +142,14 @@ XXX = (XXX, XXX)""";
       final lines =
           file.openRead().transform(utf8.decoder).transform(LineSplitter());
       int stepCounter = await walkPathToTargetPart2(lines);
+
+      //checked this value as the process was running to see if we may have overshot
+      expect(stepCounter).greaterThan(6000000);
+      expect(stepCounter).greaterThan(12000000);
+      expect(stepCounter).greaterThan(25000000);
+      //also tried 40M but it didn't confirm higher or lower. And I have a longer timeout
+
+      //console log stopped printing at 88710214, but not the right answer either
 
       expect(stepCounter).toBe(19783);
     });
