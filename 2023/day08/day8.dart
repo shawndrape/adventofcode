@@ -134,5 +134,13 @@ XXX = (XXX, XXX)""";
 
       expect(stepCounter).toEqual(6);
     });
+    test('input file', () async {
+      var file = File('day8_input.txt');
+      final lines =
+          file.openRead().transform(utf8.decoder).transform(LineSplitter());
+      int stepCounter = await walkPathToTargetPart2(lines);
+
+      expect(stepCounter).toBe(19783);
+    });
   });
 }
