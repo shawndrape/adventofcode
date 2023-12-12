@@ -68,6 +68,7 @@ class Hand implements Comparable<Hand> {
   }
 
   HandType _handAnalyzerWithJokers() {
+    if (cards == "JJJJJ") return HandType.FiveKind;
     var char_count = <String, int>{};
     cards.split('').forEach((e) {
       char_count[e] = (char_count[e] ?? 0) + 1;
@@ -192,7 +193,7 @@ void main() {
       expect(winnings).toEqual(252052080);
     });
   });
-  group('part 2', () {
+  group(solo: true, 'part 2', () {
     test('example', () {
       var hands = example_input.split('\n').map((e) {
         var [cards, bid] = e.split(" ");
@@ -204,6 +205,21 @@ void main() {
           (index, previous, element) => ((index + 1) * element.bid) + previous);
 
       expect(winnings).toEqual(5905);
+    });
+    test('input file', () async {
+      var file = File('day7_input.txt');
+      var lines = await file.readAsLines();
+
+      var hands = lines.map((e) {
+        var [cards, bid] = e.split(" ");
+        return Hand(cards, int.parse(bid), true);
+      }).toList();
+
+      hands.sort();
+      var winnings = hands.reversed.foldIndexed(0,
+          (index, previous, element) => ((index + 1) * element.bid) + previous);
+
+      expect(winnings).toEqual(252898370);
     });
   });
 }
