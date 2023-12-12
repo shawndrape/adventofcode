@@ -4,12 +4,6 @@ import 'dart:io';
 import 'package:async/async.dart';
 import 'package:spec/spec.dart';
 
-var exampleInput = """LLR
-
-AAA = (BBB, BBB)
-BBB = (AAA, ZZZ)
-ZZZ = (ZZZ, ZZZ)""";
-
 Future<(Iterable<String>, String, Map<String, ({String l, String r})>)>
     parseInput(Stream<String> inputLines) async {
   var queue = StreamQueue<String>(inputLines);
@@ -25,8 +19,9 @@ Future<(Iterable<String>, String, Map<String, ({String l, String r})>)>
     nodeMap[nodeName] = (l: leftTransition, r: rightTransition);
     startingNode ??= nodeName;
   }
-  if (startingNode == null || nodeMap.isEmpty)
+  if (startingNode == null || nodeMap.isEmpty) {
     throw Exception("Not enough lines in input to generate node map");
+  }
   return (endlessTransitions(transitionRules), startingNode, nodeMap);
 }
 
@@ -55,8 +50,39 @@ Future<int> walkPathToTarget(Stream<String> pathData, String targetNode) async {
   return stepCounter;
 }
 
+Future<int> walkPathToTargetPart2(Stream<String> pathData) async {
+  var (ordering, _, nodes) = await parseInput(pathData);
+  //get the starting set of nodes
+  var currentNodes = nodes.keys.where((element) => element.endsWith("A"));
+
+  allEndWithZ(Iterable<String> l) => l.every((e) => e.endsWith("Z"));
+
+  var stepCounter = 0, iter = ordering.iterator;
+  while (!allEndWithZ(currentNodes) && iter.moveNext()) {
+    var nextStep = iter.current;
+    currentNodes = currentNodes.map((currentNode) {
+      var stepOptions = nodes[currentNode];
+      if (stepOptions == null) throw Exception("Broken path detected");
+      return switch (nextStep) {
+        "L" => stepOptions.l,
+        "R" => stepOptions.r,
+        _ => throw FormatException("Invalid"),
+      };
+    });
+
+    stepCounter++;
+  }
+  print(currentNodes);
+  return stepCounter;
+}
+
 void main() async {
   group('core utils', () {
+    var exampleInput = """LLR
+
+AAA = (BBB, BBB)
+BBB = (AAA, ZZZ)
+ZZZ = (ZZZ, ZZZ)""";
     test('input parsing', () async {
       var (ordering, _, nodes) =
           await parseInput(Stream.fromIterable(exampleInput.split('\n')));
@@ -71,9 +97,14 @@ void main() async {
     });
   });
   group('part 1', () {
+    var exampleInput = """LLR
+
+AAA = (BBB, BBB)
+BBB = (AAA, ZZZ)
+ZZZ = (ZZZ, ZZZ)""";
     test('example', () async {
-      int stepCounter = await walkPathToTarget(
-          Stream.fromIterable(exampleInput.split('\n')), "ZZZ");
+      var lines = Stream.fromIterable(exampleInput.split('\n'));
+      int stepCounter = await walkPathToTarget(lines, "ZZZ");
 
       expect(stepCounter).toEqual(6);
     });
@@ -84,6 +115,24 @@ void main() async {
       int stepCounter = await walkPathToTarget(lines, "ZZZ");
 
       expect(stepCounter).toBe(19783);
+    });
+  });
+  group('part 2', () {
+    var exampleInput = """LR
+
+11A = (11B, XXX)
+11B = (XXX, 11Z)
+11Z = (11B, XXX)
+22A = (22B, XXX)
+22B = (22C, 22C)
+22C = (22Z, 22Z)
+22Z = (22B, 22B)
+XXX = (XXX, XXX)""";
+    test('example', () async {
+      var lines = Stream.fromIterable(exampleInput.split('\n'));
+      int stepCounter = await walkPathToTargetPart2(lines);
+
+      expect(stepCounter).toEqual(6);
     });
   });
 }
