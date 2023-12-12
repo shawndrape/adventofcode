@@ -73,6 +73,15 @@ class Hand implements Comparable<Hand> {
       char_count[e] = (char_count[e] ?? 0) + 1;
     });
     var current_num_of_jokers = char_count.remove("J") ?? 0;
+    var most_frequent_card, highest_count = 0;
+    for (var MapEntry(:key, :value) in char_count.entries) {
+      if (value > highest_count) {
+        most_frequent_card = key;
+        highest_count = value;
+      }
+    }
+    char_count[most_frequent_card] =
+        char_count[most_frequent_card]! + current_num_of_jokers;
     //TODO - pattern matching can't mix literals and variables, so go through
     //the char_count and add the jokers to the highest value remaining
     // Edge case: Oops all jokers
@@ -123,6 +132,12 @@ class Hand implements Comparable<Hand> {
   }
 }
 
+var example_input = """32T3K 765
+T55J5 684
+KK677 28
+KTJJT 220
+QQQJA 483""";
+
 void main() {
   group('core Hand', () {
     test('compareTo higher', () {
@@ -149,13 +164,8 @@ void main() {
     });
   });
   group('part 1', () {
-    var input = """32T3K 765
-T55J5 684
-KK677 28
-KTJJT 220
-QQQJA 483""";
     test('example', () {
-      var hands = input.split('\n').map((e) {
+      var hands = example_input.split('\n').map((e) {
         var [cards, bid] = e.split(" ");
         return Hand(cards, int.parse(bid));
       }).toList();
@@ -180,6 +190,20 @@ QQQJA 483""";
           (index, previous, element) => ((index + 1) * element.bid) + previous);
 
       expect(winnings).toEqual(252052080);
+    });
+  });
+  group('part 2', () {
+    test('example', () {
+      var hands = example_input.split('\n').map((e) {
+        var [cards, bid] = e.split(" ");
+        return Hand(cards, int.parse(bid), true);
+      }).toList();
+
+      hands.sort();
+      var winnings = hands.reversed.foldIndexed(0,
+          (index, previous, element) => ((index + 1) * element.bid) + previous);
+
+      expect(winnings).toEqual(5905);
     });
   });
 }
