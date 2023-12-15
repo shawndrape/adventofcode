@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:io';
 
 import 'package:collection/collection.dart';
@@ -24,8 +25,7 @@ int extrapolatePrevValue(List<int> series) {
     firstElementPerRecurse.add(currentList.first);
     currentList = reduceListBySubtraction(currentList);
   }
-  return firstElementPerRecurse.fold(
-      firstElementPerRecurse.removeLast(), (prev, curr) => curr - prev);
+  return firstElementPerRecurse.reversed.reduce((prev, curr) => curr - prev);
 }
 
 List<int> reduceListBySubtraction(List<int> list) =>
@@ -59,9 +59,19 @@ void main() {
   });
   group('part 2', () {
     test('example', () {
-      var actual = extrapolatePrevValue([10, 13, 16, 21, 30, 45]);
+      var actual = extrapolatePrevValue([1, 3, 6, 10, 15, 21]);
 
-      expect(actual).toEqual(5);
+      expect(actual).toEqual(0);
+    });
+    test('extended example', () {
+      var expected = [-3, 0, 5];
+
+      var actual = exampleInput
+          .split("\n")
+          .map((e) => e.split(" ").map(int.parse).toList())
+          .map((e) => extrapolatePrevValue(e));
+
+      expect(actual).toEqual(expected);
     });
     test('input file', () async {
       var file = File('day09_input.txt');
@@ -73,6 +83,7 @@ void main() {
 
       expect(actual.sum).not.toEqual(0);
       expect(actual.sum).lessThan(1261);
+      expect(actual.sum).toBe(971);
     });
   });
 }
