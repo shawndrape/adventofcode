@@ -17,7 +17,6 @@ int extrapolateNextValue(List<int> series) {
   return lastElementPerRecurse.sum;
 }
 
-//blind guess - can we negate all items in the list and sum them?
 int extrapolatePrevValue(List<int> series) {
   var currentList = series;
   var firstElementPerRecurse = <int>[];
@@ -25,8 +24,8 @@ int extrapolatePrevValue(List<int> series) {
     firstElementPerRecurse.add(currentList.first);
     currentList = reduceListBySubtraction(currentList);
   }
-  currentList.map((e) => e * -1);
-  return currentList.sum;
+  return firstElementPerRecurse.fold(
+      firstElementPerRecurse.removeLast(), (prev, curr) => curr - prev);
 }
 
 List<int> reduceListBySubtraction(List<int> list) =>
@@ -59,6 +58,11 @@ void main() {
     });
   });
   group('part 2', () {
+    test('example', () {
+      var actual = extrapolatePrevValue([10, 13, 16, 21, 30, 45]);
+
+      expect(actual).toEqual(5);
+    });
     test('input file', () async {
       var file = File('day09_input.txt');
       var lines = await file.readAsLines();
@@ -68,6 +72,7 @@ void main() {
           .map((e) => extrapolatePrevValue(e));
 
       expect(actual.sum).not.toEqual(0);
+      expect(actual.sum).lessThan(1261);
     });
   });
 }
