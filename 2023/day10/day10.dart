@@ -14,7 +14,7 @@ import 'package:spec/spec.dart';
 
 // S needs to search for segments connecting back to it, but that's fine
 
-Set<Point> connectedSegments(String char) => switch (char) {
+Set<Point<int>> connectedSegments(String char) => switch (char) {
       "F" => {Point(1, 0), Point(0, 1)},
       "L" => {Point(0, -1), Point(1, 0)},
       "J" => {Point(0, -1), Point(-1, 0)},
@@ -32,13 +32,39 @@ SJLL7
 |F--J
 LJ.LJ""";
 
-Point findStartingPipe(String input) {
+Point<int> findStartingPipe(String input) {
   var x = 0, y = 0;
   for (var line in input.split("\n")) {
     if ((x = line.indexOf("S")) > -1) return Point(x, y);
     y++;
   }
   throw Exception("No S found in input");
+}
+
+(Point<int>, Point<int>) findInitialDirections(String input, Point<int> start) {
+  List<String> grid = input.split("\n");
+  assert(grid[start.y][start.x] == "S");
+  var startingPoints = <Point<int>>[];
+  var minX = 0;
+  var minY = 0;
+  var maxY = grid.length - 1;
+  var maxX = grid[0].length - 1;
+
+  //starting from point's top-left (-1, -1), scan for digits
+  for (var y = -1; y <= 1; y++) {
+    for (var x = -1; x <= 1; x++) {
+      if (x == 0 && y == 0) continue;
+      if (start.x + x < minX || start.x + x > maxX) continue;
+      if (start.y + y < minY || start.y + y > maxY) continue;
+      var directions = connectedSegments(grid[y][x]);
+      if (directions.isEmpty) continue;
+      directions.removeWhere((element) => (Point(x, y) + element) == start);
+      if (directions.length == 1) startingPoints.addAll(directions);
+    }
+  }
+
+  assert(startingPoints.length == 2);
+  return (startingPoints[0], startingPoints[1]);
 }
 
 void main() {
