@@ -32,17 +32,17 @@ SJLL7
 |F--J
 LJ.LJ""";
 
-Point<int> findStartingPipe(String input) {
+Point<int> findStartingPipe(List<String> grid) {
   var x = 0, y = 0;
-  for (var line in input.split("\n")) {
+  for (var line in grid) {
     if ((x = line.indexOf("S")) > -1) return Point(x, y);
     y++;
   }
   throw Exception("No S found in input");
 }
 
-(Point<int>, Point<int>) findInitialDirections(String input, Point<int> start) {
-  List<String> grid = input.split("\n");
+(Point<int>, Point<int>) findInitialDirections(
+    List<String> grid, Point<int> start) {
   assert(grid[start.y][start.x] == "S");
   var startingPoints = <Point<int>>[];
   var minX = 0;
@@ -50,16 +50,20 @@ Point<int> findStartingPipe(String input) {
   var maxY = grid.length - 1;
   var maxX = grid[0].length - 1;
 
-  //starting from point's top-left (-1, -1), scan for digits
+  //starting from point's top-left (-1, -1), scan for pipes
   for (var y = -1; y <= 1; y++) {
     for (var x = -1; x <= 1; x++) {
       if (x == 0 && y == 0) continue;
-      if (start.x + x < minX || start.x + x > maxX) continue;
-      if (start.y + y < minY || start.y + y > maxY) continue;
-      var directions = connectedSegments(grid[y][x]);
+      var currX = start.x + x;
+      var currY = start.y + y;
+      if (currX < minX || currX > maxX) continue;
+      if (currY < minY || currY > maxY) continue;
+      var directions = connectedSegments(grid[currY][currX]);
       if (directions.isEmpty) continue;
-      directions.removeWhere((element) => (Point(x, y) + element) == start);
-      if (directions.length == 1) startingPoints.addAll(directions);
+      if (directions
+          .any((element) => (Point(currX, currY) + element) == start)) {
+        startingPoints.add(Point(currX, currY));
+      }
     }
   }
 
@@ -72,12 +76,20 @@ void main() {
     test('find start', () {
       var expected = Point(0, 2);
 
-      expect(findStartingPipe(complicatedExample)).toEqual(expected);
+      expect(findStartingPipe(complicatedExample.split("\n")))
+          .toEqual(expected);
     });
     test('error on missing start', () {
       var badInput = complicatedExample.replaceAll("S", "8");
 
-      expect(() => findStartingPipe(badInput)).throws.isException();
+      expect(() => findStartingPipe(badInput.split("\n"))).throws.isException();
+    });
+    test('find starting points', () {
+      var expected = (Point(1, 2), Point(0, 3));
+
+      var grid = complicatedExample.split("\n");
+      expect(findInitialDirections(grid, findStartingPipe(grid)))
+          .toEqual(expected);
     });
   });
 }
