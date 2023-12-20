@@ -1,17 +1,10 @@
+import 'dart:io';
 import 'dart:math';
 
+import 'package:collection/collection.dart';
 import 'package:spec/spec.dart';
 
 //assume top-left is 0, 0
-//no need to track history of pipe
-//just need (for each direction) current and previous
-//with curr and prev, you can apply connectedSegments
-//to curr, toss away the one equal to prev, and keep next
-//oh, and increment a counter
-
-//once both directions' `curr` are equal (or the set of prev, curr has overlap)
-//you have the answer
-
 // S needs to search for segments connecting back to it, but that's fine
 
 Set<Point<int>> connectedSegments(String char) => switch (char) {
@@ -71,6 +64,42 @@ Point<int> findStartingPipe(List<String> grid) {
   return (startingPoints[0], startingPoints[1]);
 }
 
+(int, Point<int>) findTheMidpoint(List<String> grid) {
+  //no need to track history of pipe
+  //just need (for each direction) current and previous
+  //with curr and prev, you can apply connectedSegments
+  //to curr, toss away the one equal to prev, and keep next
+  //oh, and increment a counter
+
+  //once both directions' `curr` are equal (or the set of prev, curr has overlap)
+  //you have the answer
+  var startingPoint = findStartingPipe(grid);
+  var (currentA, currentB) = findInitialDirections(grid, startingPoint);
+  var prevA = startingPoint, prevB = startingPoint;
+  var stepCount = 1;
+  while (currentA != currentB && (prevB != currentA || prevA != currentB)) {
+    //A first, then B
+    var nextAOptions = connectedSegments(grid[currentA.y][currentA.x]);
+    var nextA = nextAOptions
+        .map((e) => currentA + e)
+        .whereNot((element) => element == prevA)
+        .first;
+    prevA = currentA;
+    currentA = nextA;
+
+    var nextBOptions = connectedSegments(grid[currentB.y][currentB.x]);
+    var nextB = nextBOptions
+        .map((e) => currentB + e)
+        .whereNot((element) => element == prevB)
+        .first;
+    prevB = currentB;
+    currentB = nextB;
+
+    stepCount++;
+  }
+  return (stepCount, currentA);
+}
+
 void main() {
   group('utils', () {
     test('find start', () {
@@ -90,6 +119,27 @@ void main() {
       var grid = complicatedExample.split("\n");
       expect(findInitialDirections(grid, findStartingPipe(grid)))
           .toEqual(expected);
+    });
+  });
+  group('part 1', () {
+    test('example', () {
+      var expectedSteps = 8, expectedPoint = Point(4, 2);
+
+      var (actualSteps, actualPoint) =
+          findTheMidpoint(complicatedExample.split("\n"));
+
+      expect(actualSteps).toEqual(expectedSteps);
+      expect(actualPoint).toEqual(expectedPoint);
+    });
+    test('input file', () {
+      var file = File('day10_input.txt');
+
+      var input = file.readAsStringSync();
+      var grid = input.split("\n");
+
+      var (steps, _) = findTheMidpoint(grid);
+
+      expect(steps).toEqual(6701);
     });
   });
 }
