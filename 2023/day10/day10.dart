@@ -235,7 +235,7 @@ GGGGGGGGG
       var expandedGrid = expandGrid(exampleGrid.split("\n"));
       expect(expandedGrid.join("\n")).toEqual(expectedExpansion);
     });
-    test(solo: true, 'identify expanded starts', () {
+    test('identify expanded starts', () {
       var input = """
 ...
 .S-
