@@ -13,6 +13,17 @@ extension on String {
   String trimOperationalNodes() => replaceAll(RegExp(r'^\.+|\.+$'), '');
 }
 
+bool isValidGrouping(String field, List<int> groups) {
+  if (field.contains("?")) {
+    throw ArgumentError.value(
+        field, 'field', 'Can not contain unknown (?) nodes');
+  }
+  var validGroupsPattern = RegExp(r'#+');
+  var matches = validGroupsPattern.allMatches(field);
+  var discoveredGroups = [for (var match in matches) match[0]!.length];
+  return ListEquality().equals(groups, discoveredGroups);
+}
+
 int countPossibleConfigurations(String field, List<int> brokenGroups) {
   //the confirmed broken groups can tell us the minimum length required to
   //fullfil the requirements
@@ -41,10 +52,18 @@ int countPossibleConfigurations(String field, List<int> brokenGroups) {
 }
 
 void main() {
-  group('utils', () {
+  group(solo: true, 'utils', () {
     test('trim the known operational nodes on ends of field', () {
       expect("...#?#...".trimOperationalNodes()).toEqual("#?#");
       expect(countPossibleConfigurations(".???.###", [1, 1, 3])).toBe(1);
+    });
+    test('is valid grouping', () {
+      expect(isValidGrouping("#.#.###", [1, 1, 3])).toBeTruthy();
+    });
+    test('grouping check requires full field knowledge', () {
+      expect(() => isValidGrouping("???..###", [1, 1, 3]))
+          .throws
+          .isArgumentError();
     });
   });
   group('part 1', () {
